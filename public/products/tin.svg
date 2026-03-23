@@ -1,0 +1,45 @@
+<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94a3b8" />
+      <stop offset="20%" stop-color="#cbd5e1" />
+      <stop offset="50%" stop-color="#e2e8f0" />
+      <stop offset="80%" stop-color="#cbd5e1" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+    <linearGradient id="lid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748b" />
+      <stop offset="50%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#64748b" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10" />
+      <feOffset dx="10" dy="10" result="offsetblur" />
+      <feFlood flood-color="#000000" flood-opacity="0.3" />
+      <feComposite in2="offsetblur" operator="in" />
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Shadow -->
+  <ellipse cx="200" cy="460" rx="140" ry="30" fill="black" opacity="0.2" filter="url(#shadow)" />
+
+  <!-- Can Body -->
+  <rect x="50" y="100" width="300" height="350" fill="url(#metal)" rx="10" ry="10" />
+  
+  <!-- Highlights -->
+  <rect x="90" y="100" width="20" height="350" fill="white" opacity="0.1" />
+  <rect x="290" y="100" width="10" height="350" fill="white" opacity="0.2" />
+  
+  <!-- Logo Area -->
+  <rect x="130" y="220" width="140" height="80" rx="5" fill="#1A2F23" />
+  <text x="200" y="275" font-family="Arial, sans-serif" font-weight="900" font-size="48" fill="#e2e8f0" text-anchor="middle">DK</text>
+  <text x="200" y="295" font-family="Arial, sans-serif" font-size="10" fill="#4ADE80" text-anchor="middle" letter-spacing="2">ALUM & EARTH</text>
+
+  <!-- Lid Rim -->
+  <ellipse cx="200" cy="100" rx="150" ry="30" fill="url(#lid)" stroke="#475569" stroke-width="2" />
+  <ellipse cx="200" cy="95" rx="130" ry="25" fill="#e2e8f0" opacity="0.5" />
+</svg>

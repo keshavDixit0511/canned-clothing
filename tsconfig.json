@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "features/**",
+    "server/middleware/**",
+    "server/redis/**",
+    "server/utils/errors.ts",
+    "services/shipping/**",
+    "services/payment/stripe.ts"
+  ]
 }

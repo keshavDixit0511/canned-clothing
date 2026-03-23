@@ -1,0 +1,5 @@
+<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <path d="M120,100 L280,100 L320,200 L280,220 L260,200 L260,450 L140,450 L140,200 L120,220 L80,200 Z" fill="#1A2F23" />
+  <circle cx="200" cy="80" r="50" fill="#1A2F23" />
+  <text x="200" y="250" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#4ADE80" text-anchor="middle" opacity="0.3">DK</text>
+</svg>

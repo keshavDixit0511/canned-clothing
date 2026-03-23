@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum PlantStage {
+  SEEDED
+  SPROUT
+  GROWING
+  MATURE
+}
+
+//////////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////////
+
+model User {
+  id       String  @id @default(cuid())
+  name     String?
+  email    String  @unique
+  password String
+  image    String?
+  role     Role    @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart        Cart?
+  orders      Order[]
+  plants      Plant[]
+  reminders   Reminder[]
+  growthLogs  GrowthLog[]
+  leaderboard Leaderboard?
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT
+//////////////////////////////////////////////////////
+
+model Product {
+  id          String @id @default(cuid())
+  name        String
+  slug        String @unique
+  description String
+  price       Float
+  stock       Int
+
+  activity String
+  seedType String
+
+  images ProductImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  plants Plant[]
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  url       String
+  order     Int      @default(0)
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// CART
+//////////////////////////////////////////////////////
+
+model Cart {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id String @id @default(cuid())
+
+  cartId    String
+  productId String
+
+  quantity Int
+
+  cart    Cart    @relation(fields: [cartId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+//////////////////////////////////////////////////////
+// ORDER
+//////////////////////////////////////////////////////
+
+model Order {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+
+  shippingName    String
+  shippingPhone   String
+  shippingAddr    String
+  shippingCity    String
+  shippingState   String
+  shippingZip     String
+  shippingCountry String
+
+  items   OrderItem[]
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId   String
+  productId String
+
+  quantity Int
+  price    Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+//////////////////////////////////////////////////////
+// PAYMENT
+//////////////////////////////////////////////////////
+
+model Payment {
+  id String @id @default(cuid())
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  provider    PaymentProvider
+  providerRef String?
+
+  amount Float
+  status PaymentStatus
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// PLANT SYSTEM
+//////////////////////////////////////////////////////
+
+model Plant {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  seedType String
+  qrCode   String @unique
+
+  stage PlantStage @default(SEEDED)
+
+  createdAt DateTime @default(now())
+
+  growthLogs GrowthLog[]
+
+  reminders Reminder[]
+}
+
+//////////////////////////////////////////////////////
+// GROWTH TRACKING
+//////////////////////////////////////////////////////
+
+model GrowthLog {
+  id String @id @default(cuid())
+
+  plantId String
+  userId  String
+
+  note  String?
+  image String?
+
+  plant Plant @relation(fields: [plantId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// WATER REMINDERS
+//////////////////////////////////////////////////////
+
+model Reminder {
+  id String @id @default(cuid())
+
+  userId  String
+  plantId String
+
+  time DateTime
+
+  user  User  @relation(fields: [userId], references: [id])
+  plant Plant @relation(fields: [plantId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// ECO IMPACT TRACKING
+//////////////////////////////////////////////////////
+
+model EcoImpact {
+  id String @id @default(cuid())
+
+  totalTins     Int
+  totalPlants   Int
+  totalCO2Saved Float
+
+  updatedAt DateTime @updatedAt
+}
+
+//////////////////////////////////////////////////////
+// LEADERBOARD
+//////////////////////////////////////////////////////
+
+model Leaderboard {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  points Int  @default(0)
+  rank   Int?
+
+  updatedAt DateTime @updatedAt
+}

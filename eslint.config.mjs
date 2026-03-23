@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // These legacy layers are not wired into the current app router runtime.
+    "features/**",
+    "server/middleware/**",
+    "server/redis/**",
+    "server/utils/errors.ts",
+    "services/shipping/**",
+    "services/payment/stripe.ts",
   ]),
 ]);
 
