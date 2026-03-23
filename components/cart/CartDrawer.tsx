@@ -57,7 +57,7 @@
 // components/cart/CartDrawer.tsx
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useCartStore } from "@/store/cartStore"
@@ -71,6 +71,11 @@ function formatINR(p: number) {
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity } = useCartStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Sync cart with server on open
   useEffect(() => {
@@ -89,7 +94,7 @@ export function CartDrawer() {
   const tax      = Math.round(subtotal * 0.18)
   const total    = subtotal + tax
 
-  if (typeof document === "undefined") return null
+  if (!mounted) return null
 
   return (
     <>

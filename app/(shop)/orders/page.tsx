@@ -150,7 +150,7 @@ export default async function OrdersPage() {
 
         {orders.length > 0 && (
           <div className="space-y-4">
-            {orders.map((order) => {
+            {orders.map((order: OrdersResult[number]) => {
               const s = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.PENDING
               return (
                 <div
