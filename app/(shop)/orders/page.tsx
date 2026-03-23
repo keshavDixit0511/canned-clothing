@@ -90,6 +90,8 @@ async function fetchOrdersForUser(userId: string) {
 }
 
 type OrdersResult = Awaited<ReturnType<typeof fetchOrdersForUser>>
+type OrderRecord = OrdersResult[number]
+type OrderItemRecord = OrderRecord["items"][number]
 
 async function getOrders(): Promise<OrdersResult | null> {
   try {
@@ -150,7 +152,7 @@ export default async function OrdersPage() {
 
         {orders.length > 0 && (
           <div className="space-y-4">
-            {orders.map((order: OrdersResult[number]) => {
+            {orders.map((order: OrderRecord) => {
               const s = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.PENDING
               return (
                 <div
@@ -190,7 +192,7 @@ export default async function OrdersPage() {
                   </div>
 
                   <div className="divide-y divide-white/5">
-                    {order.items.map((item) => (
+                    {order.items.map((item: OrderItemRecord) => (
                       <div key={item.id} className="flex items-center gap-4 px-5 py-3">
                         <div className="relative h-12 w-12 shrink-0 rounded-xl border border-white/8 bg-white/5 overflow-hidden flex items-center justify-center">
                           {item.product.images[0] ? (
