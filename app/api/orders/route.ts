@@ -1,6 +1,5 @@
 // app/api/orders/route.ts
 
-import type { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 import { createOrderSchema } from "@/lib/validators"
@@ -86,8 +85,8 @@ export async function POST(req: Request) {
 
     // Order creation is intentionally separated from payment initiation so
     // the client can safely retry the payment step without rebuilding the cart.
-    const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const newOrder = await tx.order.create({
+    const [order] = await prisma.$transaction([
+      prisma.order.create({
         data: {
           userId: payload.userId,
           totalAmount,
@@ -110,23 +109,15 @@ export async function POST(req: Request) {
         include: {
           items: { include: { product: { include: { images: true } } } },
         },
-      })
-
-      // Decrement product stock
-      await Promise.all(
-        cart.items.map((item: CartItemRecord) =>
-          tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { decrement: item.quantity } },
-          })
-        )
-      )
-
-      // Clear the cart
-      await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
-
-      return newOrder
-    })
+      }),
+      ...cart.items.map((item: CartItemRecord) =>
+        prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        })
+      ),
+      prisma.cartItem.deleteMany({ where: { cartId: cart.id } }),
+    ])
 
     return NextResponse.json(order, { status: 201 })
   } catch (error: unknown) {
