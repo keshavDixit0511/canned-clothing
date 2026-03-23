@@ -62,7 +62,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         "hover:border-white/18 hover:-translate-y-1 transition-all duration-300",
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}
-    >
+    > 
       {/* Image */}
       <div className="relative h-64 bg-gradient-to-br from-white/5 to-white/2 overflow-hidden flex items-center justify-center">
         {primaryImage ? (
