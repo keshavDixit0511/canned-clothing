@@ -1,5 +1,6 @@
 // app/api/orders/route.ts
 
+import type { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 import { createOrderSchema } from "@/lib/validators"
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
 
     // Order creation is intentionally separated from payment initiation so
     // the client can safely retry the payment step without rebuilding the cart.
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const newOrder = await tx.order.create({
         data: {
           userId: payload.userId,
