@@ -85,14 +85,22 @@ export function isAppError(err: unknown): err is AppError {
   return err instanceof AppError
 }
 
+type ErrorWithCode = {
+  code?: string
+}
+
+function hasErrorCode(err: unknown, code: string): boolean {
+  return typeof err === "object" && err !== null && (err as ErrorWithCode).code === code
+}
+
 // ─── Prisma error helpers ─────────────────────────────────────────────────────
 
 export function isPrismaUniqueConstraint(err: unknown): boolean {
-  return (err as any)?.code === "P2002"
+  return hasErrorCode(err, "P2002")
 }
 
 export function isPrismaNotFound(err: unknown): boolean {
-  return (err as any)?.code === "P2025"
+  return hasErrorCode(err, "P2025")
 }
 
 // ─── Error message extractor ──────────────────────────────────────────────────

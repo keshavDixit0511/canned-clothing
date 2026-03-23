@@ -51,6 +51,22 @@ export class ConflictError extends AppError {
   }
 }
 
+type ErrorWithCode = {
+  code?: string
+}
+
+type ErrorWithName = {
+  name?: string
+}
+
+function hasErrorCode(err: unknown, code: string): boolean {
+  return typeof err === "object" && err !== null && (err as ErrorWithCode).code === code
+}
+
+function hasErrorName(err: unknown, name: string): boolean {
+  return typeof err === "object" && err !== null && (err as ErrorWithName).name === name
+}
+
 // ─── Error handler ────────────────────────────────────────────────────────────
 
 /**
@@ -60,13 +76,13 @@ export class ConflictError extends AppError {
  * Usage:
  *   export const POST = handleErrors(async (req) => { ... })
  */
-export function handleErrors(
-  handler: (req: Request, ...args: any[]) => Promise<NextResponse>
+export function handleErrors<Args extends unknown[]>(
+  handler: (req: Request, ...args: Args) => Promise<NextResponse>
 ) {
-  return async (req: Request, ...args: any[]): Promise<NextResponse> => {
+  return async (req: Request, ...args: Args): Promise<NextResponse> => {
     try {
       return await handler(req, ...args)
-    } catch (err: any) {
+    } catch (err: unknown) {
       return errorResponse(err)
     }
   }
@@ -99,7 +115,7 @@ export function errorResponse(err: unknown): NextResponse {
   }
 
   // Prisma unique constraint
-  if ((err as any)?.code === "P2002") {
+  if (hasErrorCode(err, "P2002")) {
     return NextResponse.json(
       { error: "A record with this value already exists", code: "CONFLICT" },
       { status: 409 }
@@ -107,7 +123,7 @@ export function errorResponse(err: unknown): NextResponse {
   }
 
   // Prisma not found
-  if ((err as any)?.code === "P2025") {
+  if (hasErrorCode(err, "P2025")) {
     return NextResponse.json(
       { error: "Record not found", code: "NOT_FOUND" },
       { status: 404 }
@@ -115,13 +131,13 @@ export function errorResponse(err: unknown): NextResponse {
   }
 
   // JWT errors
-  if ((err as any)?.name === "JsonWebTokenError") {
+  if (hasErrorName(err, "JsonWebTokenError")) {
     return NextResponse.json(
       { error: "Invalid token", code: "UNAUTHORIZED" },
       { status: 401 }
     )
   }
-  if ((err as any)?.name === "TokenExpiredError") {
+  if (hasErrorName(err, "TokenExpiredError")) {
     return NextResponse.json(
       { error: "Token expired", code: "UNAUTHORIZED" },
       { status: 401 }

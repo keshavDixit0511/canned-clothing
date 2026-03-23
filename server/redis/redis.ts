@@ -8,10 +8,12 @@
  * Env: REDIS_URL=redis://localhost:6379
  */
 
-let redis: any = null
+import type Redis from "ioredis"
+
+let redis: Redis | null = null
 let isConnected = false
 
-async function getRedis() {
+async function getRedis(): Promise<Redis | null> {
   if (redis) return redis
 
   const url = process.env.REDIS_URL

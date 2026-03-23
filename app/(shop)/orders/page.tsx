@@ -23,7 +23,7 @@
 //       <h1 className="text-3xl font-bold mb-8">Your Orders</h1>
 
 //       <div className="space-y-6">
-//         {orders.map((order: any) => (
+//         {orders.map((order) => (
 //           <div
 //             key={order.id}
 //             className="border rounded-xl p-6 flex justify-between"

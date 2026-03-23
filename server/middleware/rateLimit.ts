@@ -112,9 +112,9 @@ export function getClientIP(req: NextRequest): string {
  */
 export function withRateLimit(
   limiter:  ReturnType<typeof rateLimit>,
-  handler:  (req: NextRequest, ...args: any[]) => Promise<NextResponse>
+  handler:  (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
     const ip     = getClientIP(req)
     const result = limiter(ip)
 
