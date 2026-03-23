@@ -2,33 +2,46 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 
+async function fetchLeaderboardEntries(limit: number) {
+  return prisma.leaderboard.findMany({
+    take:    limit,
+    orderBy: { points: "desc" },
+    include: {
+      user: {
+        select: { name: true, image: true },
+      },
+    },
+  })
+}
+
+async function fetchPlantCounts(userIds: string[]) {
+  return prisma.plant.groupBy({
+    by:     ["userId"],
+    where:  { userId: { in: userIds } },
+    _count: { id: true },
+  })
+}
+
+type LeaderboardEntries = Awaited<ReturnType<typeof fetchLeaderboardEntries>>
+type LeaderboardEntry = LeaderboardEntries[number]
+type PlantCountRows = Awaited<ReturnType<typeof fetchPlantCounts>>
+type PlantCountRow = PlantCountRows[number]
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "10"), 50)
 
-    const entries = await prisma.leaderboard.findMany({
-      take:    limit,
-      orderBy: { points: "desc" },
-      include: {
-        user: {
-          select: { name: true, image: true },
-        },
-      },
-    })
+    const entries = await fetchLeaderboardEntries(limit)
 
     // Count plants per user for display
-    const userIds = entries.map((e) => e.userId)
-    const plantCounts = await prisma.plant.groupBy({
-      by:     ["userId"],
-      where:  { userId: { in: userIds } },
-      _count: { id: true },
-    })
+    const userIds = entries.map((entry: LeaderboardEntry) => entry.userId)
+    const plantCounts = await fetchPlantCounts(userIds)
     const plantCountMap = Object.fromEntries(
-      plantCounts.map((p) => [p.userId, p._count.id])
+      plantCounts.map((plantCount: PlantCountRow) => [plantCount.userId, plantCount._count.id])
     )
 
-    const response = entries.map((entry, i) => ({
+    const response = entries.map((entry: LeaderboardEntry, i: number) => ({
       rank:        entry.rank ?? i + 1,
       user:        entry.user,
       points:      entry.points,

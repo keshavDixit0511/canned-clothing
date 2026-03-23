@@ -6,6 +6,16 @@ import { createOrderSchema } from "@/lib/validators"
 import { requireSession, isAuthError } from "@/lib/auth"
 import { getErrorMessage } from "@/lib/error-message"
 
+async function fetchCartForUser(userId: string) {
+  return prisma.cart.findUnique({
+    where: { userId },
+    include: { items: { include: { product: true } } },
+  })
+}
+
+type CartResult = Awaited<ReturnType<typeof fetchCartForUser>>
+type CartItemRecord = NonNullable<CartResult>["items"][number]
+
 // ─── GET /api/orders ───────────────────────────────────────────────────────────
 
 export async function GET() {
@@ -52,10 +62,7 @@ export async function POST(req: Request) {
     const data = createOrderSchema.parse(body)
 
     // Get cart via Cart model (CartItem has cartId, not userId)
-    const cart = await prisma.cart.findUnique({
-      where: { userId: payload.userId },
-      include: { items: { include: { product: true } } },
-    })
+    const cart = await fetchCartForUser(payload.userId)
 
     if (!cart || cart.items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 })
@@ -92,7 +99,7 @@ export async function POST(req: Request) {
           shippingZip:     data.shippingZip,
           shippingCountry: data.shippingCountry,
           items: {
-            create: cart.items.map((item) => ({
+            create: cart.items.map((item: CartItemRecord) => ({
               productId: item.productId,
               quantity:  item.quantity,
               price:     item.product.price,
@@ -106,7 +113,7 @@ export async function POST(req: Request) {
 
       // Decrement product stock
       await Promise.all(
-        cart.items.map((item) =>
+        cart.items.map((item: CartItemRecord) =>
           tx.product.update({
             where: { id: item.productId },
             data: { stock: { decrement: item.quantity } },
