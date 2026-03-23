@@ -66,36 +66,39 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   CANCELLED:  { label: "Cancelled",  color: "text-red-400 bg-red-400/10 border-red-400/20"             },
 }
 
-async function getOrders() {
+async function fetchOrdersForUser(userId: string) {
+  return prisma.order.findMany({
+    where:   { userId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      items: {
+        include: {
+          product: {
+            select: {
+              name:   true,
+              slug:   true,
+              images: { take: 1, orderBy: { order: "asc" } },
+            },
+          },
+        },
+      },
+      payment: {
+        select: { status: true, provider: true },
+      },
+    },
+  })
+}
+
+type OrdersResult = Awaited<ReturnType<typeof fetchOrdersForUser>>
+
+async function getOrders(): Promise<OrdersResult | null> {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get("token")?.value
     if (!token) return null
 
     const payload = verifyToken(token)
-
-    const orders = await prisma.order.findMany({
-      where:   { userId: payload.userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        items: {
-          include: {
-            product: {
-              select: {
-                name:   true,
-                slug:   true,
-                images: { take: 1, orderBy: { order: "asc" } },
-              },
-            },
-          },
-        },
-        payment: {
-          select: { status: true, provider: true },
-        },
-      },
-    })
-
-    return orders
+    return fetchOrdersForUser(payload.userId)
   } catch {
     return null
   }
