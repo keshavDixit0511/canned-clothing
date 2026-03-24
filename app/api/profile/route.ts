@@ -35,11 +35,22 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 import { requireSession, getSession, isAuthError } from "@/lib/auth"
 
+export const dynamic = "force-dynamic"
+
+function noStoreJson(body: unknown, init?: ResponseInit) {
+  const response = NextResponse.json(body, init)
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
+  response.headers.set("Pragma", "no-cache")
+  response.headers.set("Expires", "0")
+  response.headers.set("Vary", "Cookie")
+  return response
+}
+
 export async function GET() {
   try {
     const session = await getSession()
     if (!session) {
-      return NextResponse.json({ name: null, image: null })
+      return noStoreJson({ name: null, image: null })
     }
 
     const user = await prisma.user.findUnique({
@@ -47,11 +58,11 @@ export async function GET() {
       select: { name: true, email: true, image: true, role: true },
     })
 
-    if (!user) return NextResponse.json({ name: null, image: null })
+    if (!user) return noStoreJson({ name: null, image: null })
 
-    return NextResponse.json(user)
+    return noStoreJson(user)
   } catch {
-    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
+    return noStoreJson({ error: "Failed to fetch profile" }, { status: 500 })
   }
 }
 

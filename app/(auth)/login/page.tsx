@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 import { Card } from "@/components/ui/Card"
@@ -9,8 +8,6 @@ import { Input, PasswordInput } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 
 export default function LoginPage() {
-  const router = useRouter()
-
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -34,6 +31,8 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json"
         },
+        credentials: "include",
+        cache: "no-store",
         body: JSON.stringify({
           email,
           password
@@ -48,7 +47,20 @@ export default function LoginPage() {
         return
       }
 
-      router.push("/dashboard")
+      const nextPath =
+        new URLSearchParams(window.location.search).get("redirect") ??
+        new URLSearchParams(window.location.search).get("from") ??
+        "/dashboard"
+
+      const safeNextPath =
+        nextPath.startsWith("/") && !nextPath.startsWith("//")
+          ? nextPath
+          : "/dashboard"
+
+      // Force a document navigation so the first authenticated render
+      // definitely sees the newly-set auth cookie in production.
+      window.location.replace(safeNextPath)
+      return
     } catch {
       setError("Something went wrong")
     }

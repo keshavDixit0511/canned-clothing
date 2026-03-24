@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [pwError, setPwError]   = useState("")
 
   useEffect(() => {
-    fetch("/api/profile")
+    fetch("/api/profile", { credentials: "include", cache: "no-store" })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data) {

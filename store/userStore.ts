@@ -50,7 +50,10 @@ export const useUserStore = create<UserState>()(
         if (get().isLoading) return
         set({ isLoading: true })
         try {
-          const res = await fetch("/api/profile")
+          const res = await fetch("/api/profile", {
+            credentials: "include",
+            cache: "no-store",
+          })
           if (!res.ok) {
             set({ user: null })
             return

@@ -324,11 +324,14 @@ export function Header() {
     ;(async () => {
       try {
         const [ecoRes, lbRes, profileRes] = await Promise.all([
-          fetch("/api/eco"),
-          fetch("/api/leaderboard/me"),
-          fetch("/api/profile"),
+          fetch("/api/eco", { credentials: "include", cache: "no-store" }),
+          fetch("/api/leaderboard/me", { credentials: "include", cache: "no-store" }),
+          fetch("/api/profile", { credentials: "include", cache: "no-store" }),
         ])
-        if (!ecoRes.ok || !profileRes.ok) return
+        if (!ecoRes.ok || !profileRes.ok) {
+          setUser(null)
+          return
+        }
         const [eco, lb, profile] = await Promise.all([
           ecoRes.json(),
           lbRes.ok ? lbRes.json() : { points: 0, rank: null },

@@ -45,7 +45,10 @@ export function useAuth() {
   // ── Fetch current session user from /api/profile ──────────────────────────
   const fetchUser = useCallback(async () => {
     try {
-      const res = await fetch("/api/profile", { credentials: "include" })
+      const res = await fetch("/api/profile", {
+        cache: "no-store",
+        credentials: "include",
+      })
       if (!res.ok) {
         setState({ user: null, loading: false, error: null })
         return

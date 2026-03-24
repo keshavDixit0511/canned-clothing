@@ -83,11 +83,11 @@ export default function DashboardPage() {
     ;(async () => {
       try {
         const [profileRes, ecoRes, lbRes, plantsRes, ordersRes] = await Promise.all([
-          fetch("/api/profile"),
-          fetch("/api/eco"),
-          fetch("/api/leaderboard/me"),
-          fetch("/api/plant"),
-          fetch("/api/orders"),
+          fetch("/api/profile", { credentials: "include", cache: "no-store" }),
+          fetch("/api/eco", { credentials: "include", cache: "no-store" }),
+          fetch("/api/leaderboard/me", { credentials: "include", cache: "no-store" }),
+          fetch("/api/plant", { credentials: "include", cache: "no-store" }),
+          fetch("/api/orders", { credentials: "include", cache: "no-store" }),
         ])
         const [profile, eco, lb, plants, orders] = await Promise.all([
           profileRes.ok ? profileRes.json() : { name: "Grower", image: null },
