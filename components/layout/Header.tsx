@@ -363,7 +363,7 @@ export function Header() {
         ? "border-b border-white/8 bg-[#050d0a]/90 backdrop-blur-xl shadow-lg shadow-black/30"
         : "bg-transparent"
     )}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl min-w-0 items-center gap-3 overflow-x-clip px-4 sm:gap-4 sm:px-6">
 
         {/* Logo */}
         <Logo />
