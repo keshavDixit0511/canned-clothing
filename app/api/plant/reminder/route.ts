@@ -1,83 +1,94 @@
-// app/api/plant/reminder/route.ts
-// POST /api/plant/reminder — Set a water reminder for a plant
-
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { prisma } from "@/server/db/prisma"
-import { verifyToken } from "@/lib/auth/jwt"
+import { createReminderSchema } from "@/lib/validators"
+import { requireSession, isAuthError } from "@/lib/auth"
+import { getErrorMessage } from "@/lib/error-message"
+import { apiError, apiSuccess } from "@/lib/api-response"
 
 export async function POST(req: Request) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get("token")?.value
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = verifyToken(token)
+    const payload = await requireSession()
     const body = await req.json()
-    const { plantId, time } = body
+    const data = createReminderSchema.parse(body)
+    const reminderTime = new Date(data.time)
 
-    if (!plantId || !time) {
-      return NextResponse.json(
-        { error: "plantId and time are required" },
-        { status: 400 }
-      )
-    }
+    const plant = await prisma.plant.findFirst({
+      where: { id: data.plantId, userId: payload.userId },
+    })
 
-    // Validate time is a parseable date
-    const reminderDate = new Date(time)
-    if (isNaN(reminderDate.getTime())) {
-      return NextResponse.json(
-        { error: "time must be a valid ISO date string" },
-        { status: 400 }
-      )
-    }
-
-    // Verify plant belongs to user
-    const plant = await prisma.plant.findUnique({ where: { id: plantId } })
     if (!plant) {
-      return NextResponse.json({ error: "Plant not found" }, { status: 404 })
+      return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
     }
-    if (plant.userId !== payload.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+    const duplicate = await prisma.reminder.findFirst({
+      where: {
+        userId: payload.userId,
+        plantId: data.plantId,
+        time: reminderTime,
+      },
+    })
+
+    if (duplicate) {
+      return apiError(
+        "You already have a reminder set for this time",
+        409,
+        "REMINDER_ALREADY_EXISTS"
+      )
     }
 
     const reminder = await prisma.reminder.create({
       data: {
-        userId:  payload.userId,
-        plantId,
-        time:    reminderDate,
+        userId: payload.userId,
+        plantId: data.plantId,
+        time: reminderTime,
+      },
+      include: {
+        plant: {
+          select: { id: true, seedType: true, stage: true, qrCode: true },
+        },
       },
     })
 
-    return NextResponse.json(reminder, { status: 201 })
-  } catch (error) {
+    return apiSuccess(reminder, { status: 201 })
+  } catch (error: unknown) {
+    if (isAuthError(error)) {
+      return apiError(error.message, error.status, "UNAUTHORIZED")
+    }
+
     console.error("REMINDER_CREATE_ERROR", error)
-    return NextResponse.json({ error: "Failed to set reminder" }, { status: 500 })
+    return apiError(
+      getErrorMessage(error, "Failed to set reminder"),
+      400,
+      "REMINDER_CREATE_FAILED"
+    )
   }
 }
 
-// GET /api/plant/reminder — Get all reminders for current user
 export async function GET() {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get("token")?.value
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = verifyToken(token)
+    const payload = await requireSession()
 
     const reminders = await prisma.reminder.findMany({
-      where:   { userId: payload.userId },
-      include: { plant: { select: { id: true, seedType: true, stage: true, qrCode: true } } },
+      where: { userId: payload.userId },
+      include: {
+        plant: {
+          select: { id: true, seedType: true, stage: true, qrCode: true },
+        },
+      },
       orderBy: { time: "asc" },
     })
 
-    return NextResponse.json(reminders)
-  } catch (error) {
+    return apiSuccess(reminders)
+  } catch (error: unknown) {
+    if (isAuthError(error)) {
+      return apiError(error.message, error.status, "UNAUTHORIZED")
+    }
+
     console.error("REMINDER_FETCH_ERROR", error)
-    return NextResponse.json({ error: "Failed to fetch reminders" }, { status: 500 })
+    return apiError(
+      getErrorMessage(error, "Failed to fetch reminders"),
+      500,
+      "REMINDER_FETCH_FAILED"
+    )
   }
 }

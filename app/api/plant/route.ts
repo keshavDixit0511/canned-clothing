@@ -3,6 +3,9 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 import { requireSession, isAuthError } from "@/lib/auth"
+import { qrCodeSchema } from "@/lib/validators"
+import { apiError } from "@/lib/api-response"
+import { getErrorMessage } from "@/lib/error-message"
 
 const VALID_STAGES = ["SEEDED", "SPROUT", "GROWING", "MATURE"] as const
 
@@ -15,9 +18,10 @@ export async function GET(req: Request) {
     const payload = await requireSession()
 
     const { searchParams } = new URL(req.url)
-    const qrCode = searchParams.get("qrCode")
+    const qrCodeParam = searchParams.get("qrCode")
 
-    if (qrCode) {
+    if (qrCodeParam) {
+      const qrCode = qrCodeSchema.parse(qrCodeParam)
       const plant = await prisma.plant.findUnique({
         where: { qrCode },
         include: {
@@ -28,7 +32,7 @@ export async function GET(req: Request) {
       })
 
       if (!plant) {
-        return NextResponse.json({ error: "Plant not found" }, { status: 404 })
+        return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
       }
 
       const isOwner = plant.userId === payload.userId
@@ -63,11 +67,15 @@ export async function GET(req: Request) {
     return NextResponse.json(plants)
   } catch (error) {
     if (isAuthError(error)) {
-      return NextResponse.json({ error: error.message }, { status: error.status })
+      return apiError(error.message, error.status, "UNAUTHORIZED")
     }
 
     console.error("PLANTS_FETCH_ERROR", error)
-    return NextResponse.json({ error: "Failed to fetch plants" }, { status: 500 })
+    return apiError(
+      getErrorMessage(error, "Failed to fetch plants"),
+      500,
+      "PLANTS_FETCH_FAILED"
+    )
   }
 }
 
@@ -82,25 +90,23 @@ export async function PATCH(req: Request) {
     const { plantId, stage } = body
 
     if (!plantId || !stage) {
-      return NextResponse.json(
-        { error: "plantId and stage are required" },
-        { status: 400 }
-      )
+      return apiError("plantId and stage are required", 400, "INVALID_STAGE_UPDATE")
     }
 
     if (!VALID_STAGES.includes(stage)) {
-      return NextResponse.json(
-        { error: `stage must be one of: ${VALID_STAGES.join(", ")}` },
-        { status: 400 }
+      return apiError(
+        `stage must be one of: ${VALID_STAGES.join(", ")}`,
+        400,
+        "INVALID_STAGE_UPDATE"
       )
     }
 
     const plant = await prisma.plant.findUnique({ where: { id: plantId } })
     if (!plant) {
-      return NextResponse.json({ error: "Plant not found" }, { status: 404 })
+      return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
     }
     if (plant.userId !== payload.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      return apiError("Forbidden", 403, "FORBIDDEN")
     }
 
     const updated = await prisma.plant.update({
@@ -130,10 +136,14 @@ export async function PATCH(req: Request) {
     return NextResponse.json(updated)
   } catch (error) {
     if (isAuthError(error)) {
-      return NextResponse.json({ error: error.message }, { status: error.status })
+      return apiError(error.message, error.status, "UNAUTHORIZED")
     }
 
     console.error("PLANT_STAGE_UPDATE_ERROR", error)
-    return NextResponse.json({ error: "Failed to update stage" }, { status: 500 })
+    return apiError(
+      getErrorMessage(error, "Failed to update stage"),
+      500,
+      "PLANT_STAGE_UPDATE_FAILED"
+    )
   }
 }

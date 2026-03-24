@@ -1,55 +1,53 @@
-// app/api/plant/log/route.ts
-// POST /api/plant/log — Add a growth log entry to a plant
-
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { prisma } from "@/server/db/prisma"
-import { verifyToken } from "@/lib/auth/jwt"
+import { addGrowthLogSchema } from "@/lib/validators"
+import { requireSession, isAuthError } from "@/lib/auth"
+import { getErrorMessage } from "@/lib/error-message"
+import { apiError, apiSuccess } from "@/lib/api-response"
 
 export async function POST(req: Request) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get("token")?.value
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = verifyToken(token)
+    const payload = await requireSession()
     const body = await req.json()
-    const { plantId, note, image } = body
+    const data = addGrowthLogSchema.parse(body)
 
-    if (!plantId) {
-      return NextResponse.json({ error: "plantId is required" }, { status: 400 })
-    }
+    const plant = await prisma.plant.findFirst({
+      where: { id: data.plantId, userId: payload.userId },
+    })
 
-    // Verify plant exists and belongs to user
-    const plant = await prisma.plant.findUnique({ where: { id: plantId } })
     if (!plant) {
-      return NextResponse.json({ error: "Plant not found" }, { status: 404 })
-    }
-    if (plant.userId !== payload.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
     }
 
-    const log = await prisma.growthLog.create({
-      data: {
-        plantId,
-        userId: payload.userId,
-        note:   note   ?? null,
-        image:  image  ?? null,
-      },
+    const log = await prisma.$transaction(async (tx) => {
+      const created = await tx.growthLog.create({
+        data: {
+          plantId: data.plantId,
+          userId: payload.userId,
+          note: data.note ?? null,
+          image: data.image ?? null,
+        },
+      })
+
+      await tx.leaderboard.upsert({
+        where: { userId: payload.userId },
+        update: { points: { increment: 25 } },
+        create: { userId: payload.userId, points: 25 },
+      })
+
+      return created
     })
 
-    // Award leaderboard points for logging growth
-    await prisma.leaderboard.upsert({
-      where:  { userId: payload.userId },
-      update: { points: { increment: 25 } },
-      create: { userId: payload.userId, points: 25 },
-    })
+    return apiSuccess(log, { status: 201 })
+  } catch (error: unknown) {
+    if (isAuthError(error)) {
+      return apiError(error.message, error.status, "UNAUTHORIZED")
+    }
 
-    return NextResponse.json(log, { status: 201 })
-  } catch (error) {
     console.error("GROWTH_LOG_ERROR", error)
-    return NextResponse.json({ error: "Failed to add growth log" }, { status: 500 })
+    return apiError(
+      getErrorMessage(error, "Failed to add growth log"),
+      400,
+      "GROWTH_LOG_FAILED"
+    )
   }
 }

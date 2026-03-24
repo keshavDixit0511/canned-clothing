@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { PLANT_STAGES } from "@/lib/constants"
 import { getErrorMessage } from "@/lib/error-message"
+import { parseApiResponse } from "@/lib/api-client"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,9 +38,9 @@ export interface Plant {
 }
 
 export interface RegisterPlantPayload {
-  productId: string
+  qrCode: string
   seedType:  string
-  qrCode?:   string
+  productId?: string
 }
 
 export interface AddGrowthLogPayload {
@@ -95,12 +96,13 @@ export function usePlants() {
   const getPlantByQR = useCallback(
     async (qrCode: string): Promise<{ plant: Plant | null; isOwner: boolean; error?: string }> => {
       try {
-        const res = await fetch(`/api/plant?qrCode=${encodeURIComponent(qrCode)}`, {
+      const res = await fetch(`/api/plant?qrCode=${encodeURIComponent(qrCode)}`, {
           credentials: "include",
         })
         if (res.status === 404) return { plant: null, isOwner: false, error: "Plant not found" }
-        if (!res.ok) throw new Error("Failed to fetch plant")
-        const data = await res.json()
+        const parsed = await parseApiResponse<{ plant: Plant; isOwner: boolean }>(res)
+        if (!parsed.ok) throw new Error(parsed.error)
+        const data = parsed.data
         return { plant: data.plant, isOwner: data.isOwner }
       } catch (error: unknown) {
         return { plant: null, isOwner: false, error: getErrorMessage(error, "Failed to fetch plant") }
@@ -119,8 +121,9 @@ export function usePlants() {
           credentials: "include",
           body:        JSON.stringify(payload),
         })
-        const data = await res.json()
-        if (!res.ok) return { success: false, error: data.error ?? "Registration failed" }
+        const parsed = await parseApiResponse<Plant>(res)
+        if (!parsed.ok) return { success: false, error: parsed.error }
+        const data = parsed.data
 
         setState((s) => ({ ...s, plants: [data, ...s.plants] }))
         return { success: true, plant: data }
@@ -141,8 +144,9 @@ export function usePlants() {
           credentials: "include",
           body:        JSON.stringify(payload),
         })
-        const data = await res.json()
-        if (!res.ok) return { success: false, error: data.error ?? "Failed to add log" }
+        const parsed = await parseApiResponse<GrowthLog>(res)
+        if (!parsed.ok) return { success: false, error: parsed.error }
+        const data = parsed.data
 
         // Update plant in local state with new log
         setState((s) => ({
@@ -171,8 +175,8 @@ export function usePlants() {
           credentials: "include",
           body:        JSON.stringify(payload),
         })
-        const data = await res.json()
-        if (!res.ok) return { success: false, error: data.error ?? "Failed to update stage" }
+        const parsed = await parseApiResponse<Plant>(res)
+        if (!parsed.ok) return { success: false, error: parsed.error }
 
         setState((s) => ({
           ...s,
@@ -198,8 +202,8 @@ export function usePlants() {
           credentials: "include",
           body:        JSON.stringify({ plantId, time }),
         })
-        const data = await res.json()
-        if (!res.ok) return { success: false, error: data.error ?? "Failed to set reminder" }
+        const parsed = await parseApiResponse<{ id: string }>(res)
+        if (!parsed.ok) return { success: false, error: parsed.error }
         return { success: true }
       } catch {
         return { success: false, error: "Network error" }

@@ -1,10 +1,10 @@
 // app/api/growth/route.ts
 
-import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 import { addGrowthLogSchema } from "@/lib/validators"
 import { requireSession, isAuthError } from "@/lib/auth"
 import { getErrorMessage } from "@/lib/error-message"
+import { apiError, apiSuccess } from "@/lib/api-response"
 
 export async function POST(req: Request) {
   try {
@@ -17,35 +17,39 @@ export async function POST(req: Request) {
       where: { id: data.plantId, userId: payload.userId },
     })
     if (!plant) {
-      return NextResponse.json({ error: "Plant not found" }, { status: 404 })
+      return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
     }
 
-    const log = await prisma.growthLog.create({
-      data: {
-        plantId: data.plantId,
-        userId:  payload.userId,
-        note:    data.note ?? null,
-        image:   data.image ?? null,
-      },
+    const log = await prisma.$transaction(async (tx) => {
+      const created = await tx.growthLog.create({
+        data: {
+          plantId: data.plantId,
+          userId: payload.userId,
+          note: data.note ?? null,
+          image: data.image ?? null,
+        },
+      })
+
+      await tx.leaderboard.upsert({
+        where: { userId: payload.userId },
+        update: { points: { increment: 25 } },
+        create: { userId: payload.userId, points: 25 },
+      })
+
+      return created
     })
 
-    // Award points for logging growth
-    await prisma.leaderboard.upsert({
-      where:  { userId: payload.userId },
-      update: { points: { increment: 25 } },
-      create: { userId: payload.userId, points: 25 },
-    })
-
-    return NextResponse.json(log, { status: 201 })
+    return apiSuccess(log, { status: 201 })
   } catch (error: unknown) {
     if (isAuthError(error)) {
-      return NextResponse.json({ error: error.message }, { status: error.status })
+      return apiError(error.message, error.status, "UNAUTHORIZED")
     }
 
     console.error("[growth POST]", error)
-    return NextResponse.json(
-      { error: getErrorMessage(error, "Failed to log growth") },
-      { status: 400 }
+    return apiError(
+      getErrorMessage(error, "Failed to log growth"),
+      400,
+      "GROWTH_LOG_FAILED"
     )
   }
 }

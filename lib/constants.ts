@@ -53,6 +53,8 @@ export const API = {
   eco:            "/api/eco",
   payment:        "/api/payment",
   plants:         "/api/plant",
+  plantLog:       "/api/plant/log",
+  plantReminder:  "/api/plant/reminder",
   plantRegister:  "/api/plant/register",
   upload:         "/api/upload",
 } as const

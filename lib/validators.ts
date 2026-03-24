@@ -37,6 +37,12 @@ export const cuidSchema = z
   .string()
   .min(1, "ID is required")
 
+export const qrCodeSchema = z
+  .string()
+  .min(1, "QR code is required")
+  .max(255, "QR code is too long")
+  .trim()
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
@@ -108,11 +114,9 @@ export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>
 // ─── Plant ────────────────────────────────────────────────────────────────────
 
 export const registerPlantSchema = z.object({
-  productId: cuidSchema,
+  qrCode:    qrCodeSchema,
   seedType:  z.string().min(1, "Seed type is required").max(100).trim(),
-  // QR codes may be generated server-side for fallback flows, so callers can
-  // omit this value when they only know the purchased product and seed type.
-  qrCode:    z.string().min(1, "QR code is required").optional(),
+  productId: cuidSchema.optional(),
 })
 
 export const updatePlantStageSchema = z.object({
@@ -137,7 +141,12 @@ export type AddGrowthLogInput = z.infer<typeof addGrowthLogSchema>
 
 export const createReminderSchema = z.object({
   plantId: cuidSchema,
-  time:    z.string().datetime({ message: "Invalid datetime format" }),
+  time:    z
+    .string()
+    .datetime({ message: "Invalid datetime format" })
+    .refine((value) => new Date(value).getTime() > Date.now(), {
+      message: "Reminder time must be in the future",
+    }),
 })
 
 export type CreateReminderInput = z.infer<typeof createReminderSchema>

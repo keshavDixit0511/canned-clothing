@@ -9,27 +9,11 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { formatDate, timeAgo } from "@/lib/utils"
 import { getPlantStageProgress } from "@/lib/helpers"
+import { parseApiResponse, errorFromUnknown } from "@/lib/api-client"
+import { API, ROUTES } from "@/lib/constants"
+import type { GrowthLog, Plant, PlantStage, QRScanResponse } from "@/types/plant"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
-
-type PlantStage = "SEEDED" | "SPROUT" | "GROWING" | "MATURE"
-
-interface GrowthLog {
-  id: string
-  note: string | null
-  image: string | null
-  createdAt: string
-}
-
-interface Plant {
-  id: string
-  seedType: string
-  qrCode: string
-  stage: PlantStage
-  createdAt: string
-  product: { id: string; name: string; slug: string; seedType: string } | null
-  growthLogs: GrowthLog[]
-}
 
 type PageState =
   | { status: "loading" }
@@ -37,6 +21,16 @@ type PageState =
   | { status: "claimed" }
   | { status: "loaded"; plant: Plant; isOwner: boolean }
   | { status: "error"; message: string }
+
+function toDateTimeLocalValue(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, "0")
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -89,11 +83,6 @@ const PARTICLE_SPECS = Array.from({ length: 18 }, (_, index) => ({
   duration: 6 + (index % 5) * 2,
   delay: (index % 5) * 0.8,
 }))
-
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message
-  return "Something went wrong"
-}
 
 function getDaysSinceCreated(createdAt: string) {
   return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000)
@@ -323,22 +312,24 @@ function AddLogForm({
   const [open, setOpen]       = useState(false)
 
   const handleSubmit = async () => {
-    if (!note.trim()) return
+    if (!note.trim() || loading) return
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/growth", {
+      const res = await fetch(API.plantLog, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ plantId, note }),
       })
-      if (!res.ok) throw new Error("Failed to log growth")
-      const log = await res.json()
-      onSuccess(log)
+      const parsed = await parseApiResponse<GrowthLog>(res)
+      if (!parsed.ok) throw new Error(parsed.error)
+
+      onSuccess(parsed.data)
       setNote("")
       setOpen(false)
     } catch (error: unknown) {
-      setError(getErrorMessage(error))
+      setError(errorFromUnknown(error, "Failed to log growth"))
     } finally {
       setLoading(false)
     }
@@ -386,7 +377,7 @@ function AddLogForm({
           {loading ? "Saving..." : "Save Log"}
         </button>
         <button
-          onClick={() => { setOpen(false); setNote("") }}
+          onClick={() => { setOpen(false); setNote(""); setError(null) }}
           className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/50 hover:text-white/80 transition-colors"
         >
           Cancel
@@ -403,22 +394,27 @@ function ReminderForm({ plantId }: { plantId: string }) {
   const [loading, setLoading]   = useState(false)
   const [success, setSuccess]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
+  const minTime = toDateTimeLocalValue(new Date(Date.now() + 60000))
 
   const handleSet = async () => {
-    if (!time) return
+    if (!time || loading) return
     setLoading(true)
     setError(null)
+    setSuccess(false)
     try {
-      const res = await fetch("/api/reminders", {
+      const res = await fetch(API.plantReminder, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ plantId, time: new Date(time).toISOString() }),
       })
-      if (!res.ok) throw new Error("Failed to set reminder")
+      const parsed = await parseApiResponse<{ id: string }>(res)
+      if (!parsed.ok) throw new Error(parsed.error)
+
       setSuccess(true)
       setTime("")
     } catch (error: unknown) {
-      setError(getErrorMessage(error))
+      setError(errorFromUnknown(error, "Failed to set reminder"))
     } finally {
       setLoading(false)
     }
@@ -440,7 +436,11 @@ function ReminderForm({ plantId }: { plantId: string }) {
           <input
             type="datetime-local"
             value={time}
-            onChange={(e) => setTime(e.target.value)}
+            min={minTime}
+            onChange={(e) => {
+              setTime(e.target.value)
+              setSuccess(false)
+            }}
             className={cn(
               "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2",
               "text-sm text-white/70 focus:outline-none focus:border-emerald-400/40",
@@ -529,23 +529,36 @@ function RegisterPlant({
   const [error, setError]       = useState<string | null>(null)
 
   const handleRegister = async () => {
-    if (!seedType.trim()) return
+    if (!seedType.trim() || loading) return
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/plant/register", {
+      const res = await fetch(API.plantRegister, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ qrCode, seedType }),
       })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error ?? "Registration failed")
+      const parsed = await parseApiResponse<Plant>(res)
+      if (!parsed.ok) {
+        if (parsed.code === "PLANT_ALREADY_REGISTERED_BY_USER") {
+          const existingRes = await fetch(`${API.plants}?qrCode=${encodeURIComponent(qrCode)}`, {
+            credentials: "include",
+            cache: "no-store",
+          })
+          const existing = await parseApiResponse<QRScanResponse>(existingRes)
+          if (existing.ok && existing.data.isOwner) {
+            onRegistered(existing.data.plant)
+            return
+          }
+        }
+
+        throw new Error(parsed.error)
       }
-      const plant = await res.json()
-      onRegistered(plant)
+
+      onRegistered(parsed.data)
     } catch (error: unknown) {
-      setError(getErrorMessage(error))
+      setError(errorFromUnknown(error, "Registration failed"))
     } finally {
       setLoading(false)
     }
@@ -631,7 +644,8 @@ function RegisterPlant({
 export default function ScanPage() {
   const params  = useParams()
   const router  = useRouter()
-  const code    = params.code as string
+  const codeParam = params.code
+  const code = Array.isArray(codeParam) ? codeParam[0] : codeParam
 
   const [state, setState]           = useState<PageState>({ status: "loading" })
   const [logs, setLogs]             = useState<GrowthLog[]>([])
@@ -639,37 +653,70 @@ export default function ScanPage() {
   const [justRegistered, setJustRegistered] = useState(false)
 
   useEffect(() => {
-    if (!code) return
+    if (!code?.trim()) {
+      setState({ status: "error", message: "Invalid QR code" })
+      return
+    }
+
+    let cancelled = false
+
     ;(async () => {
       try {
-        // Try to fetch plant by qrCode
-        const res = await fetch(`/api/plant?qrCode=${encodeURIComponent(code)}`)
+        const res = await fetch(`${API.plants}?qrCode=${encodeURIComponent(code)}`, {
+          credentials: "include",
+          cache: "no-store",
+        })
+        const parsed = await parseApiResponse<QRScanResponse>(res)
 
-        if (res.status === 404) {
-          setState({ status: "register", qrCode: code })
-          return
+        if (cancelled) return
+
+        if (!parsed.ok) {
+          if (parsed.status === 404) {
+            setLogs([])
+            setJustRegistered(false)
+            setState({ status: "register", qrCode: code })
+            return
+          }
+
+          if (parsed.status === 401) {
+            router.push(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.scan(code))}`)
+            return
+          }
+
+          throw new Error(parsed.error)
         }
-        if (res.status === 401) {
-          router.push(`/login?redirect=/scan/${code}`)
-          return
-        }
-        if (!res.ok) throw new Error("Failed to load plant")
 
-        const data = await res.json()
-
-        // data can be { plant, isOwner }
-        if (!data.isOwner) {
+        if (!parsed.data.isOwner) {
+          setLogs([])
+          setJustRegistered(false)
           setState({ status: "claimed" })
           return
         }
 
-        setLogs(data.plant.growthLogs ?? [])
-        setState({ status: "loaded", plant: data.plant, isOwner: true })
+        setLogs(parsed.data.plant.growthLogs ?? [])
+        setJustRegistered(false)
+        setState({ status: "loaded", plant: parsed.data.plant, isOwner: true })
       } catch (error: unknown) {
-        setState({ status: "error", message: getErrorMessage(error) })
+        if (!cancelled) {
+          setState({
+            status: "error",
+            message: errorFromUnknown(error, "Failed to load plant"),
+          })
+        }
       }
     })()
+
+    return () => {
+      cancelled = true
+    }
   }, [code, router])
+
+  useEffect(() => {
+    if (!justRegistered) return
+
+    const timeout = window.setTimeout(() => setJustRegistered(false), 5000)
+    return () => window.clearTimeout(timeout)
+  }, [justRegistered])
 
   const handleRegistered = (plant: Plant) => {
     setLogs(plant.growthLogs ?? [])
@@ -679,6 +726,17 @@ export default function ScanPage() {
 
   const handleLogAdded = (log: GrowthLog) => {
     setLogs((prev) => [log, ...prev])
+    setState((prev) =>
+      prev.status === "loaded"
+        ? {
+            ...prev,
+            plant: {
+              ...prev.plant,
+              growthLogs: [log, ...(prev.plant.growthLogs ?? [])],
+            },
+          }
+        : prev
+    )
   }
 
   // ── Loading ──
