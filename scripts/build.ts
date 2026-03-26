@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs"
-import { join } from "node:path"
+import { delimiter, join } from "node:path"
 import { spawnSync } from "node:child_process"
 
 const root = process.cwd()
@@ -9,7 +9,7 @@ mkdirSync(tempDir, { recursive: true })
 
 const env = {
   ...process.env,
-  PATH: `${binDir};${process.env.PATH ?? ""}`,
+  PATH: `${binDir}${delimiter}${process.env.PATH ?? ""}`,
   TEMP: tempDir,
   TMP: tempDir,
   TMPDIR: tempDir,
