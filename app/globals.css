@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060a06;
+  --foreground: #ededed;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -19,26 +20,14 @@
   --shadow-neumorphic-inset: inset 8px 8px 16px #d1d9e6, inset -8px -8px 16px #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-  
-  @theme inline {
-    --shadow-neumorphic-raised: 8px 8px 16px #000000, -8px -8px 16px #1e1e1e;
-    --shadow-neumorphic-inset: inset 8px 8px 16px #000000, inset -8px -8px 16px #1e1e1e;
-  }
-}
+/* Dark-only design — no light mode override needed */
 
+html,
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-}
-
-html,
-body {
+  color-scheme: dark;
   max-width: 100%;
   overflow-x: clip;
 }

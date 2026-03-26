@@ -28,7 +28,6 @@ const PROTECTED_PREFIXES = [
   "/cart",
   "/checkout",
   "/orders",
-  "/scan",
 ]
 
 export function middleware(req: NextRequest) {
@@ -59,6 +58,5 @@ export const config = {
     "/cart",
     "/checkout",
     "/orders",
-    "/scan/:path*",
   ],
 }

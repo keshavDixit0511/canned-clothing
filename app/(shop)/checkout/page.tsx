@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { useOrders } from "@/hooks/useOrders"
 import { useCartStore } from "@/store/cartStore"
 
+export const dynamic = "force-dynamic"
+
 declare global {
   interface Window {
     Razorpay?: new (options: {
@@ -64,6 +66,31 @@ const INITIAL_FORM: CheckoutForm = {
   shippingZip: "",
   shippingCountry: "India",
 }
+
+const inputClassName =
+  "mt-2 w-full rounded-2xl border border-white/10 bg-[#07110b] px-4 py-3 text-sm text-white/90 outline-none backdrop-blur-sm transition [color-scheme:dark] placeholder:text-white/28 focus:border-emerald-400/45 focus:bg-[#0b1710] focus:ring-4 focus:ring-emerald-400/10"
+
+const labelClassName = "block text-sm font-semibold text-white/70"
+
+const panelShell =
+  "overflow-hidden rounded-[30px] border border-white/8 bg-[#08120d]/95 shadow-[0_24px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+
+const chipClassName =
+  "inline-flex items-center gap-2.5 rounded-full border border-emerald-400/20 bg-emerald-400/8 px-4 py-1.5"
+
+const checkoutSurfaceStyle = {
+  backgroundColor: "rgba(8, 18, 13, 0.95)",
+  boxShadow: "0 24px 80px rgba(0, 0, 0, 0.38)",
+  colorScheme: "dark",
+} as const
+
+const checkoutControlStyle = {
+  backgroundColor: "#07110b",
+  borderColor: "rgba(255, 255, 255, 0.12)",
+  color: "rgba(255, 255, 255, 0.94)",
+  caretColor: "#ffffff",
+  colorScheme: "dark",
+} as const
 
 function formatINR(amount: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -224,9 +251,11 @@ export default function CheckoutPage() {
 
   if (loadingCart) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-white/60">
-          Loading your checkout...
+      <div className="checkout-dark relative min-h-screen overflow-hidden bg-[#060a06]" style={{ colorScheme: "dark", backgroundColor: "#060a06" }}>
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className={`${panelShell} p-8 text-center text-white/60`} style={checkoutSurfaceStyle}>
+            Loading your checkout...
+          </div>
         </div>
       </div>
     )
@@ -234,163 +263,283 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center space-y-4">
-          <h1 className="text-3xl font-bold text-white">Your cart is empty</h1>
-          <p className="text-white/60">
-            Add a product before starting checkout.
-          </p>
-          <Link
-            href="/products"
-            className="inline-flex rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white"
-          >
-            Browse Products
-          </Link>
+      <div className="checkout-dark relative min-h-screen overflow-hidden bg-[#060a06]" style={{ colorScheme: "dark", backgroundColor: "#060a06" }}>
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className={`${panelShell} space-y-4 p-8 text-center`} style={checkoutSurfaceStyle}>
+            <h1 className="text-3xl font-bold text-white">Your cart is empty</h1>
+            <p className="text-white/60">
+              Add a product before starting checkout.
+            </p>
+            <Link
+              href="/products"
+              className="inline-flex rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-400"
+            >
+              Browse Products
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+    <div className="checkout-dark relative min-h-screen overflow-hidden bg-[#060a06]" style={{ colorScheme: "dark", backgroundColor: "#060a06" }}>
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          backgroundSize: "200px",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute left-1/2 top-0 h-[340px] w-[720px] -translate-x-1/2"
+          style={{ background: "radial-gradient(ellipse, rgba(52,211,153,0.1), transparent 70%)" }}
+        />
+        <div
+          className="absolute right-[-120px] top-40 h-[360px] w-[360px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.05), transparent 68%)" }}
+        />
+      </div>
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(45deg, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1px, transparent 1px, transparent 60px)",
+        }}
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[1.3fr,0.9fr]">
-        <div className="bg-white shadow-md rounded-xl p-6 space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Shipping details</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium">
-                Full name
-                <input
-                  value={form.shippingName}
-                  onChange={(e) => updateField("shippingName", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                Phone number
-                <input
-                  value={form.shippingPhone}
-                  onChange={(e) => updateField("shippingPhone", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                />
-              </label>
-
-              <label className="block text-sm font-medium sm:col-span-2">
-                Address
-                <textarea
-                  value={form.shippingAddr}
-                  onChange={(e) => updateField("shippingAddr", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                  rows={4}
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                City
-                <input
-                  value={form.shippingCity}
-                  onChange={(e) => updateField("shippingCity", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                State
-                <input
-                  value={form.shippingState}
-                  onChange={(e) => updateField("shippingState", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                Pincode
-                <input
-                  value={form.shippingZip}
-                  onChange={(e) => updateField("shippingZip", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                />
-              </label>
-
-              <label className="block text-sm font-medium">
-                Country
-                <input
-                  value={form.shippingCountry}
-                  onChange={(e) => updateField("shippingCountry", e.target.value)}
-                  className="mt-2 w-full rounded-lg border p-3"
-                />
-              </label>
-            </div>
+      <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8 space-y-4">
+          <span className={chipClassName}>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300">
+              Secure checkout
+            </span>
+          </span>
+          <div className="space-y-2">
+            <h1
+              className="text-white leading-[0.9]"
+              style={{
+                fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)",
+                fontSize: "clamp(44px, 7vw, 84px)",
+              }}
+            >
+              READY TO
+              <br />
+              PLANT YOUR ORDER?
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-white/50 sm:text-base">
+              Review your shipping details and complete payment in a checkout that matches the rest of the brand experience.
+            </p>
           </div>
-
-          {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </p>
-          )}
-
-          {successMessage && (
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {successMessage}
-            </p>
-          )}
-
-          <button
-            onClick={handleCheckout}
-            className="w-full bg-black text-white py-3 rounded-lg"
-            disabled={submitting}
-          >
-            {submitting ? "Processing..." : "Place Order And Pay"}
-          </button>
         </div>
 
-        <aside className="rounded-xl bg-white shadow-md p-6 space-y-5">
-          <div>
-            <h2 className="text-lg font-semibold">Order summary</h2>
-            <p className="text-sm text-black/60">
-              Review your items before payment.
-            </p>
+        <div className="grid gap-6 lg:grid-cols-[1.18fr,0.82fr] lg:items-start">
+          <div className={panelShell} style={checkoutSurfaceStyle}>
+            <div className="border-b border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(52,211,153,0.12),transparent_42%)] px-6 py-6 sm:px-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="py-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300/90">
+                    Shipping details
+                  </p>
+                  <h2
+                    className="mt-2 text-white"
+                    style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "clamp(28px, 4vw, 42px)" }}
+                  >
+                    DELIVERY INFORMATION
+                  </h2>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Payment mode</p>
+                  <p className="mt-1 text-sm font-semibold text-white/80">Razorpay</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6 px-6 py-6 sm:px-8 sm:py-8">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <label className={labelClassName}>
+                  Full name
+                  <input
+                    value={form.shippingName}
+                    onChange={(e) => updateField("shippingName", e.target.value)}
+                    className={inputClassName}
+                    style={checkoutControlStyle}
+                    placeholder="Aman Verma"
+                    autoComplete="name"
+                  />
+                </label>
+
+                <label className={labelClassName}>
+                  Phone number
+                  <input
+                    value={form.shippingPhone}
+                    onChange={(e) => updateField("shippingPhone", e.target.value)}
+                    className={inputClassName}
+                    style={checkoutControlStyle}
+                    placeholder="+91 98765 43210"
+                    autoComplete="tel"
+                  />
+                </label>
+
+                <label className={`${labelClassName} sm:col-span-2`}>
+                  Address
+                  <textarea
+                    value={form.shippingAddr}
+                    onChange={(e) => updateField("shippingAddr", e.target.value)}
+                    className={`${inputClassName} min-h-32 resize-y`}
+                    style={checkoutControlStyle}
+                    placeholder="Apartment, street, area, landmark"
+                    autoComplete="street-address"
+                    rows={4}
+                  />
+                </label>
+
+                <label className={labelClassName}>
+                  City
+                  <input
+                    value={form.shippingCity}
+                    onChange={(e) => updateField("shippingCity", e.target.value)}
+                    className={inputClassName}
+                    style={checkoutControlStyle}
+                    placeholder="New Delhi"
+                    autoComplete="address-level2"
+                  />
+                </label>
+
+                <label className={labelClassName}>
+                  State
+                  <input
+                    value={form.shippingState}
+                    onChange={(e) => updateField("shippingState", e.target.value)}
+                    className={inputClassName}
+                    style={checkoutControlStyle}
+                    placeholder="Delhi"
+                    autoComplete="address-level1"
+                  />
+                </label>
+
+                <label className={labelClassName}>
+                  Pincode
+                  <input
+                    value={form.shippingZip}
+                    onChange={(e) => updateField("shippingZip", e.target.value)}
+                    className={inputClassName}
+                    style={checkoutControlStyle}
+                    placeholder="110001"
+                    autoComplete="postal-code"
+                  />
+                </label>
+
+                <label className={labelClassName}>
+                  Country
+                  <input
+                    value={form.shippingCountry}
+                    onChange={(e) => updateField("shippingCountry", e.target.value)}
+                    className={inputClassName}
+                    style={checkoutControlStyle}
+                    placeholder="India"
+                    autoComplete="country-name"
+                  />
+                </label>
+              </div>
+
+              {error && (
+                <p className="rounded-[22px] border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {error}
+                </p>
+              )}
+
+              {successMessage && (
+                <p className="rounded-[22px] border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                  {successMessage}
+                </p>
+              )}
+
+              <button
+                onClick={handleCheckout}
+                className="group relative w-full overflow-hidden rounded-2xl px-5 py-4 text-base font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+                style={{
+                  background: "linear-gradient(135deg, #059669, #34d399)",
+                  boxShadow: "0 10px 30px rgba(52,211,153,0.22)",
+                }}
+                disabled={submitting}
+              >
+                <span className="relative z-10">
+                  {submitting ? "Processing..." : "Place Order And Pay"}
+                </span>
+                <span
+                  className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ background: "linear-gradient(135deg, #10b981, #6ee7b7)" }}
+                />
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {cartItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-medium">{item.product.name}</p>
-                  <p className="text-sm text-black/60">
-                    Qty {item.quantity}
+          <aside className={`${panelShell} p-6 sm:p-7 lg:sticky lg:top-24`} style={checkoutSurfaceStyle}>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300/90">
+                Order summary
+              </p>
+              <h2
+                className="mt-2 text-white"
+                style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "clamp(28px, 4vw, 40px)" }}
+              >
+                FINAL REVIEW
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-white/45">
+                Review your items and final amount before continuing to Razorpay.
+              </p>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-4 rounded-[24px] border border-white/8 bg-black/20 px-4 py-4"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <p className="truncate font-medium text-white/90">{item.product.name}</p>
+                    <p className="text-sm text-white/38">
+                      Qty {item.quantity}
+                    </p>
+                  </div>
+                  <p className="font-semibold text-white">
+                    {formatINR(item.product.price * item.quantity)}
                   </p>
                 </div>
-                <p className="font-medium">
-                  {formatINR(item.product.price * item.quantity)}
-                </p>
+              ))}
+            </div>
+
+            <div className="mt-5 space-y-3 rounded-[24px] border border-white/8 bg-black/20 p-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-white/40">Subtotal</span>
+                <span className="font-medium text-white/90">{formatINR(subtotal)}</span>
               </div>
-            ))}
-          </div>
+              <div className="flex justify-between">
+                <span className="text-white/40">GST (18%)</span>
+                <span className="font-medium text-white/90">{formatINR(tax)}</span>
+              </div>
+              <div className="flex justify-between border-t border-white/8 pt-3 text-base font-semibold text-white">
+                <span>Total</span>
+                <span>{formatINR(total)}</span>
+              </div>
+            </div>
 
-          <div className="border-t pt-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-black/60">Subtotal</span>
-              <span>{formatINR(subtotal)}</span>
+            <div className="mt-5 rounded-[24px] border border-emerald-400/12 bg-emerald-400/8 px-4 py-4 text-sm text-white/78">
+              <p className="font-medium text-emerald-300">Secure payment flow</p>
+              <p className="mt-1 text-white/48">
+                Razorpay opens after order validation, which helps prevent mismatched totals or skipped checks.
+              </p>
             </div>
-            <div className="flex justify-between">
-              <span className="text-black/60">GST (18%)</span>
-              <span>{formatINR(tax)}</span>
-            </div>
-            <div className="flex justify-between font-semibold text-base pt-2">
-              <span>Total</span>
-              <span>{formatINR(total)}</span>
-            </div>
-          </div>
 
-          <p className="text-xs text-black/50">
-            Payment is opened only after the server creates a valid order, so
-            retries won&apos;t skip inventory or shipping validation.
-          </p>
-        </aside>
+            <p className="mt-5 text-xs leading-5 text-white/34">
+              Need to change something first? You can still go back to your cart and update quantities before placing the order.
+            </p>
+          </aside>
+        </div>
       </div>
     </div>
   )

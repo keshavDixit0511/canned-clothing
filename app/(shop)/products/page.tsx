@@ -8,6 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useSearchParams, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { getProductAvailabilityMeta } from "@/lib/commerce"
 
 interface Product {
   id:          string
@@ -16,6 +17,7 @@ interface Product {
   price:       number
   description: string
   stock:       number
+  availabilityStatus: string
   seedType:    string
   activity:    string
   images:      { url: string; order: number }[]
@@ -51,7 +53,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
     return () => clearTimeout(t)
   }, [index])
 
-  const inStock      = product.stock > 0
+  const availability = getProductAvailabilityMeta(product.availabilityStatus, product.stock)
+  const inStock      = availability.purchasable && product.stock > 0
   const primaryImage = product.images.sort((a, b) => a.order - b.order)[0]?.url ?? null
 
   return (
@@ -84,9 +87,17 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          {!inStock && (
+          <span className={cn(
+            "rounded-full border px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-sm",
+            availability.badge === "amber" && "bg-amber-400/15 border-amber-400/30 text-amber-300",
+            availability.badge === "emerald" && "bg-emerald-400/15 border-emerald-400/30 text-emerald-300",
+            availability.badge === "red" && "bg-red-400/15 border-red-400/30 text-red-300",
+          )}>
+            {availability.label}
+          </span>
+          {!inStock && availability.label === "Out of Stock" && (
             <span className="rounded-full bg-black/80 border border-red-400/40 px-2.5 py-0.5 text-[10px] font-bold text-red-400 backdrop-blur-sm">
-              Sold Out
+              Join Waitlist
             </span>
           )}
           {product.activity && (
@@ -135,7 +146,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
               ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400 group-hover:bg-emerald-400/20"
               : "border-white/10 bg-white/5 text-white/25"
           )}>
-            {inStock ? "Shop Now →" : "Out of Stock"}
+            {inStock ? "Shop Now →" : availability.label}
           </span>
         </div>
       </div>
@@ -169,6 +180,7 @@ function ProductsPageContent() {
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState(searchParams.get("search")   ?? "")
   const [activity, setActivity] = useState(searchParams.get("activity") ?? "all")
+  const [seedType, setSeedType] = useState(searchParams.get("seedType") ?? "")
   const [sort, setSort]         = useState(searchParams.get("sort")     ?? "newest")
 
   const fetchProducts = useCallback(async () => {
@@ -177,6 +189,7 @@ function ProductsPageContent() {
       const params = new URLSearchParams()
       if (search)                params.set("search",   search)
       if (activity !== "all")    params.set("activity", activity)
+      if (seedType)              params.set("seedType", seedType)
       if (sort !== "newest")     params.set("sort",     sort)
 
       const res  = await fetch(`/api/products?${params.toString()}`)
@@ -187,7 +200,7 @@ function ProductsPageContent() {
     } finally {
       setLoading(false)
     }
-  }, [search, activity, sort])
+  }, [search, activity, seedType, sort])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
@@ -196,17 +209,20 @@ function ProductsPageContent() {
     const params = new URLSearchParams()
     if (search)             params.set("search",   search)
     if (activity !== "all") params.set("activity", activity)
+    if (seedType)           params.set("seedType", seedType)
     if (sort !== "newest")  params.set("sort",     sort)
-    router.replace(`/products?${params.toString()}`, { scroll: false })
-  }, [search, activity, sort, router])
+    const nextUrl = params.toString() ? `/products?${params.toString()}` : "/products"
+    router.replace(nextUrl, { scroll: false })
+  }, [search, activity, seedType, sort, router])
 
   const clearFilters = () => {
     setSearch("")
     setActivity("all")
+    setSeedType("")
     setSort("newest")
   }
 
-  const hasFilters = search || activity !== "all" || sort !== "newest"
+  const hasFilters = search || activity !== "all" || !!seedType || sort !== "newest"
 
   return (
     <div className="min-h-screen bg-[#060a06] pb-20">
@@ -282,6 +298,14 @@ function ProductsPageContent() {
               {f.emoji} {f.label}
             </button>
           ))}
+          {seedType && (
+            <button
+              onClick={() => setSeedType("")}
+              className="rounded-full border border-emerald-400/40 bg-emerald-400/12 px-4 py-1.5 text-xs font-bold text-emerald-300 transition-all duration-200"
+            >
+              🌱 {seedType} ×
+            </button>
+          )}
         </div>
 
         {/* ── Seed surprise info strip ── */}

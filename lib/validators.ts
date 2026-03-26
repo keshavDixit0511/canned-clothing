@@ -1,4 +1,31 @@
 import { z } from "zod"
+import {
+  LEAD_STATUSES,
+  PRODUCT_AVAILABILITY_STATUSES,
+} from "@/lib/commerce"
+
+function isValidImageSource(value: string) {
+  if (!value.trim()) return false
+
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+  } catch {
+    return value.startsWith("/")
+  }
+}
+
+const productImageSchema = z.object({
+  url: z
+    .string()
+    .min(1, "Image URL is required")
+    .trim()
+    .refine(
+      isValidImageSource,
+      "Image URL must be an absolute URL or a site-relative path"
+    ),
+  order: z.number().int().min(0),
+})
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -58,6 +85,24 @@ export const loginSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput    = z.infer<typeof loginSchema>
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(72, "Password is too long"),
+  })
+  .refine(
+    (data) => data.currentPassword !== data.newPassword,
+    {
+      message: "New password must be different from current password",
+      path: ["newPassword"],
+    }
+  )
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
 // ─── Shipping Address ─────────────────────────────────────────────────────────
 
@@ -133,7 +178,13 @@ export const addGrowthLogSchema = z.object({
   plantId: cuidSchema,
   note:    z.string().max(500).trim().optional(),
   image:   z.string().url("Invalid image URL").optional(),
-})
+}).refine(
+  (data) => Boolean(data.note?.trim() || data.image),
+  {
+    message: "Add a note or image to log growth",
+    path: ["note"],
+  }
+)
 
 export type AddGrowthLogInput = z.infer<typeof addGrowthLogSchema>
 
@@ -159,17 +210,65 @@ export const createProductSchema = z.object({
   description: z.string().min(10).max(5000).trim(),
   price:       z.number().positive("Price must be positive"),
   stock:       z.number().int().min(0),
+  availabilityStatus: z.enum(PRODUCT_AVAILABILITY_STATUSES).default("IN_STOCK"),
   activity:    z.string().min(1).max(100).trim(),
   seedType:    z.string().min(1).max(100).trim(),
   images:      z
-    .array(z.object({ url: z.string().url(), order: z.number().int().min(0) }))
+    .array(productImageSchema)
     .min(1, "At least one image is required"),
 })
 
-export const updateProductSchema = createProductSchema.partial()
+export const updateProductSchema = z
+  .object({
+    name: z.string().min(2).max(200).trim().optional(),
+    slug: slugSchema.optional(),
+    description: z.string().min(10).max(5000).trim().optional(),
+    price: z.number().positive("Price must be positive").optional(),
+    stock: z.number().int().min(0).optional(),
+    availabilityStatus: z.enum(PRODUCT_AVAILABILITY_STATUSES).optional(),
+    activity: z.string().min(1).max(100).trim().optional(),
+    seedType: z.string().min(1).max(100).trim().optional(),
+    images: z
+      .array(productImageSchema)
+      .min(1, "At least one image is required")
+      .optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+  })
 
 export type CreateProductInput = z.infer<typeof createProductSchema>
 export type UpdateProductInput = z.infer<typeof updateProductSchema>
+
+// â”€â”€â”€ Product Interest Lead â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const requiredPhoneSchema = phoneSchema.unwrap()
+
+export const createProductInterestLeadSchema = z.object({
+  productId: cuidSchema,
+  name: nameSchema,
+  email: emailSchema,
+  phone: requiredPhoneSchema,
+  city: z.string().max(100).trim().optional(),
+  likedConcept: z.enum(["YES", "MAYBE", "NO"]),
+  willingToPayRange: z.enum([
+    "PRICE_999_1299",
+    "PRICE_1299_1599",
+    "PRICE_1599_1999",
+    "PRICE_1999_PLUS",
+  ]),
+  wouldRecommend: z.enum(["YES", "MAYBE", "NO"]),
+  comment: z.string().max(1000).trim().optional(),
+})
+
+export type CreateProductInterestLeadInput = z.infer<typeof createProductInterestLeadSchema>
+
+export const updateProductInterestLeadSchema = z.object({
+  status: z.enum(LEAD_STATUSES),
+  adminNotes: z.string().max(2000).trim().optional(),
+})
+
+export type UpdateProductInterestLeadInput = z.infer<typeof updateProductInterestLeadSchema>
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 

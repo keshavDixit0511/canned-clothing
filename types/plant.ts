@@ -43,6 +43,19 @@ export interface Plant {
   reminders?: Reminder[]
 }
 
+export interface PublicPlantScan {
+  id:        string
+  seedType:  string
+  stage:     PlantStage
+  createdAt: string
+  product: {
+    id:       string
+    name:     string
+    slug:     string
+    seedType: string
+  } | null
+}
+
 export interface PlantSummary {
   id:        string
   seedType:  string
@@ -68,10 +81,15 @@ export interface SetReminderInput {
   time:    string  // ISO date string
 }
 
-export interface QRScanResponse {
-  plant:   Plant
-  isOwner: boolean
-}
+export type QRScanResponse =
+  | {
+      plant:   Plant
+      isOwner: true
+    }
+  | {
+      plant:   PublicPlantScan
+      isOwner: false
+    }
 
 // Stage metadata for UI
 export interface StageConfig {

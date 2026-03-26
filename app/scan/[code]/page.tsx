@@ -13,14 +13,31 @@ import { parseApiResponse, errorFromUnknown } from "@/lib/api-client"
 import { API, ROUTES } from "@/lib/constants"
 import type { GrowthLog, Plant, PlantStage, QRScanResponse } from "@/types/plant"
 
+export const dynamic = "force-dynamic"
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type PageState =
   | { status: "loading" }
+  | { status: "unclaimed"; qrCode: string }
+  | { status: "public"; plant: PublicPlant }
   | { status: "register"; qrCode: string }
   | { status: "claimed" }
   | { status: "loaded"; plant: Plant; isOwner: boolean }
   | { status: "error"; message: string }
+
+type PublicPlant = {
+  id: string
+  seedType: string
+  stage: PlantStage
+  createdAt: string
+  product: {
+    id: string
+    name: string
+    slug: string
+    seedType: string
+  } | null
+}
 
 function toDateTimeLocalValue(date: Date) {
   const pad = (value: number) => value.toString().padStart(2, "0")
@@ -639,6 +656,118 @@ function RegisterPlant({
   )
 }
 
+function PublicScanGate({
+  loginHref,
+  qrCode,
+}: {
+  loginHref: string
+  qrCode: string
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <Particles />
+      <div className="w-full max-w-md space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-xl">
+        <p className="text-5xl">🌱</p>
+        <p className="font-['Syne'] text-2xl font-black text-white">
+          This tin is ready to claim
+        </p>
+        <p className="text-sm text-white/50 leading-relaxed">
+          Sign in to activate this QR code, claim ownership, and unlock reminders,
+          growth logs, and points.
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            href={loginHref}
+            className="flex-1 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-400 transition-colors"
+          >
+            Sign in to claim
+          </Link>
+          <Link
+            href="/products"
+            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            Browse products
+          </Link>
+        </div>
+        <p className="text-[11px] text-white/25">QR Code: {qrCode}</p>
+      </div>
+    </div>
+  )
+}
+
+function PublicPlantSummary({
+  plant,
+  loginHref,
+  isAuthenticated,
+}: {
+  plant: PublicPlant
+  loginHref: string
+  isAuthenticated: boolean
+}) {
+  const cfg = STAGE_CONFIG[plant.stage]
+
+  return (
+    <div className="min-h-screen bg-[#050d0a]">
+      <Particles />
+      <div className="mx-auto max-w-lg px-4 pt-12 pb-20">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-5 backdrop-blur-xl">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/30 mb-2">
+              QR Scan Result
+            </p>
+            <h1 className="font-['Syne'] text-3xl font-black text-white">
+              {plant.product?.name ?? "Tin Garden"}
+            </h1>
+            <p className="mt-2 text-sm text-white/50">
+              This tin is already claimed, so we can only show a limited public view.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex items-center justify-between">
+              <span className={cn("text-sm font-bold", cfg.color)}>
+                {cfg.emoji} {cfg.label}
+              </span>
+              <span className="text-xs text-white/30">
+                Since {formatDate(plant.createdAt)}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-white/65">
+              {plant.seedType} • {plant.product?.seedType ?? "Seeded tin"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-left">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/30 mb-2">
+              What you can do
+            </p>
+            <p className="text-sm text-white/50 leading-relaxed">
+              {isAuthenticated
+                ? "View your own plants in the dashboard or continue scanning your tins."
+                : "Sign in if this is your tin, or browse products to start a new one."}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href={isAuthenticated ? "/dashboard/plants" : loginHref}
+              className="flex-1 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-400 transition-colors text-center"
+            >
+              {isAuthenticated ? "Open dashboard" : "Sign in"}
+            </Link>
+            <Link
+              href="/products"
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/75 hover:text-white hover:bg-white/10 transition-colors text-center"
+            >
+              Shop more tins
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ScanPage() {
@@ -646,11 +775,13 @@ export default function ScanPage() {
   const router  = useRouter()
   const codeParam = params.code
   const code = Array.isArray(codeParam) ? codeParam[0] : codeParam
+  const loginHref = `${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.scan(code ?? ""))}`
 
   const [state, setState]           = useState<PageState>({ status: "loading" })
   const [logs, setLogs]             = useState<GrowthLog[]>([])
   const [activeTab, setActiveTab]   = useState<"overview" | "logs" | "guide" | "badges">("overview")
   const [justRegistered, setJustRegistered] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     if (!code?.trim()) {
@@ -662,24 +793,34 @@ export default function ScanPage() {
 
     ;(async () => {
       try {
-        const res = await fetch(`${API.plants}?qrCode=${encodeURIComponent(code)}`, {
-          credentials: "include",
-          cache: "no-store",
-        })
-        const parsed = await parseApiResponse<QRScanResponse>(res)
+        const [profileRes, plantRes] = await Promise.all([
+          fetch(API.profile, {
+            credentials: "include",
+            cache: "no-store",
+          }),
+          fetch(`${API.plants}?qrCode=${encodeURIComponent(code)}`, {
+            credentials: "include",
+            cache: "no-store",
+          }),
+        ])
+
+        const profile = profileRes.ok ? await profileRes.json() : null
+        const authed = Boolean(profile?.email)
+        const parsed = await parseApiResponse<QRScanResponse>(plantRes)
 
         if (cancelled) return
+        setIsAuthenticated(authed)
 
         if (!parsed.ok) {
           if (parsed.status === 404) {
             setLogs([])
             setJustRegistered(false)
-            setState({ status: "register", qrCode: code })
+            setState({ status: "unclaimed", qrCode: code })
             return
           }
 
           if (parsed.status === 401) {
-            router.push(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.scan(code))}`)
+            router.push(loginHref)
             return
           }
 
@@ -689,7 +830,7 @@ export default function ScanPage() {
         if (!parsed.data.isOwner) {
           setLogs([])
           setJustRegistered(false)
-          setState({ status: "claimed" })
+          setState({ status: "public", plant: parsed.data.plant as PublicPlant })
           return
         }
 
@@ -709,7 +850,7 @@ export default function ScanPage() {
     return () => {
       cancelled = true
     }
-  }, [code, router])
+  }, [code, loginHref, router])
 
   useEffect(() => {
     if (!justRegistered) return
@@ -769,6 +910,28 @@ export default function ScanPage() {
   }
 
   // ── Claimed by someone else ──
+  if (state.status === "unclaimed") {
+    return (
+      <div className="min-h-screen bg-[#050d0a]">
+        {isAuthenticated ? (
+          <RegisterPlant qrCode={state.qrCode} onRegistered={handleRegistered} />
+        ) : (
+          <PublicScanGate loginHref={loginHref} qrCode={state.qrCode} />
+        )}
+      </div>
+    )
+  }
+
+  if (state.status === "public") {
+    return (
+      <PublicPlantSummary
+        plant={state.plant}
+        loginHref={loginHref}
+        isAuthenticated={isAuthenticated}
+      />
+    )
+  }
+
   if (state.status === "claimed") {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">

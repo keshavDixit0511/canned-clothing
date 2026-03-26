@@ -1,35 +1,18 @@
-// app/layout.tsx
-
 import type { Metadata, Viewport } from "next"
-import { Bebas_Neue, DM_Sans }     from "next/font/google"
-import { LayoutShell }             from "@/components/layout/LayoutShell"
-import { ToastProvider }           from "@/components/ui/Toast"
+import type { CSSProperties } from "react"
+import { LayoutShell } from "@/components/layout/LayoutShell"
+import { ToastProvider } from "@/components/ui/Toast"
 import "./globals.css"
 
-// ── Fonts ──────────────────────────────────────────────────────────────────────
-
-const bebas = Bebas_Neue({
-  weight:   "400",
-  subsets:  ["latin"],
-  variable: "--font-bebas",
-  display:  "swap",
-})
-
-const dmSans = DM_Sans({
-  subsets:  ["latin"],
-  variable: "--font-dm",
-  display:  "swap",
-})
-
-// ── Metadata ───────────────────────────────────────────────────────────────────
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: {
-    default:  "ALUM & EARTH — DK | Wear it. Plant it. Grow it.",
+    default: "ALUM & EARTH - DK | Wear it. Plant it. Grow it.",
     template: "%s | ALUM & EARTH",
   },
   description:
-    "Premium bamboo-spandex performance shirts delivered in a brushed aluminum tin — with seeds inside. Wear it. Plant it. Track your growth.",
+    "Premium bamboo-spandex performance shirts delivered in a brushed aluminum tin - with seeds inside. Wear it. Plant it. Track your growth.",
   keywords: [
     "sustainable fashion",
     "bamboo shirt",
@@ -41,71 +24,63 @@ export const metadata: Metadata = {
     "eco friendly t-shirt",
     "India",
   ],
-  authors:  [{ name: "ALUM & EARTH" }],
-  creator:  "ALUM & EARTH",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_URL ?? "https://alumandearth.com"
-  ),
+  authors: [{ name: "ALUM & EARTH" }],
+  creator: "ALUM & EARTH",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_URL ?? "https://alumandearth.com"),
   openGraph: {
-    type:        "website",
-    locale:      "en_IN",
-    url:         process.env.NEXT_PUBLIC_URL ?? "https://alumandearth.com",
-    siteName:    "ALUM & EARTH — DK",
-    title:       "ALUM & EARTH — DK | Wear it. Plant it. Grow it.",
-    description: "Premium shirts in brushed aluminum tins — with seeds inside.",
+    type: "website",
+    locale: "en_IN",
+    url: process.env.NEXT_PUBLIC_URL ?? "https://alumandearth.com",
+    siteName: "ALUM & EARTH - DK",
+    title: "ALUM & EARTH - DK | Wear it. Plant it. Grow it.",
+    description: "Premium shirts in brushed aluminum tins - with seeds inside.",
     images: [
       {
-        url:    "/og-image.jpg",
-        width:  1200,
+        url: "/og-image.jpg",
+        width: 1200,
         height: 630,
-        alt:    "ALUM & EARTH — DK",
+        alt: "ALUM & EARTH - DK",
       },
     ],
   },
   twitter: {
-    card:        "summary_large_image",
-    title:       "ALUM & EARTH — DK",
+    card: "summary_large_image",
+    title: "ALUM & EARTH - DK",
     description: "Wear it. Plant it. Grow it.",
-    images:      ["/og-image.jpg"],
+    images: ["/og-image.jpg"],
   },
   robots: {
-    index:  true,
+    index: true,
     follow: true,
   },
   icons: {
-    icon:  "/favicon.ico",
+    icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
 }
 
 export const viewport: Viewport = {
-  width:        "device-width",
+  width: "device-width",
   initialScale: 1,
-  themeColor:   "#060a06",
+  themeColor: "#060a06",
 }
-
-// ── Root Layout ────────────────────────────────────────────────────────────────
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const fontVars: CSSProperties = {
+    "--font-bebas": "Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
+    "--font-dm": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  } as CSSProperties
+
   return (
-    <html
-      lang="en"
-      className={`${bebas.variable} ${dmSans.variable}`}
-      suppressHydrationWarning
-    >
-      <body
-        className="bg-[#060a06] text-white antialiased font-[var(--font-dm)]"
-        suppressHydrationWarning
-      >
+    <html lang="en" style={fontVars} suppressHydrationWarning>
+      <body className="bg-[#060a06] text-white antialiased font-sans" suppressHydrationWarning>
         <ToastProvider>
-          <LayoutShell>
-            {children}
-          </LayoutShell>
+          <LayoutShell>{children}</LayoutShell>
         </ToastProvider>
       </body>
     </html>

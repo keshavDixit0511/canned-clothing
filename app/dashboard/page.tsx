@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useCountUp } from "@/hooks"
+import { getOrderStatusMeta } from "@/lib/order-status"
 
 interface DashboardData {
   profile: { name: string; image: string | null }
@@ -21,29 +22,6 @@ const STAGE_CONFIG: Record<string, { emoji: string; color: string; label: string
   SPROUT: { emoji: "🌿", color: "text-lime-400", label: "Sprouting" },
   GROWING: { emoji: "🪴", color: "text-green-400", label: "Growing" },
   MATURE: { emoji: "🌳", color: "text-emerald-400", label: "Mature" },
-}
-
-const ORDER_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  PENDING: {
-    color: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-    label: "Pending",
-  },
-  PROCESSING: {
-    color: "text-blue-400 bg-blue-400/10 border-blue-400/20",
-    label: "Processing",
-  },
-  SHIPPED: {
-    color: "text-sky-400 bg-sky-400/10 border-sky-400/20",
-    label: "Shipped",
-  },
-  DELIVERED: {
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-    label: "Delivered",
-  },
-  CANCELLED: {
-    color: "text-red-400 bg-red-400/10 border-red-400/20",
-    label: "Cancelled",
-  },
 }
 
 function StatCard({
@@ -302,7 +280,7 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y divide-white/5">
                 {data.orders.map((order) => {
-                  const status = ORDER_STATUS_CONFIG[order.status] ?? ORDER_STATUS_CONFIG.PENDING
+                  const status = getOrderStatusMeta(order.status)
 
                   return (
                     <div key={order.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">

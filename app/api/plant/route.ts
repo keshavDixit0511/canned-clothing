@@ -2,10 +2,11 @@
 
 import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
-import { requireSession, isAuthError } from "@/lib/auth"
+import { getSession, requireSession, isAuthError } from "@/lib/auth"
 import { qrCodeSchema } from "@/lib/validators"
 import { apiError } from "@/lib/api-response"
 import { getErrorMessage } from "@/lib/error-message"
+import { isForwardStageTransition, getStageRewardPoints } from "@/lib/plant-progress"
 
 const VALID_STAGES = ["SEEDED", "SPROUT", "GROWING", "MATURE"] as const
 
@@ -15,7 +16,7 @@ const VALID_STAGES = ["SEEDED", "SPROUT", "GROWING", "MATURE"] as const
 
 export async function GET(req: Request) {
   try {
-    const payload = await requireSession()
+    const session = await getSession()
 
     const { searchParams } = new URL(req.url)
     const qrCodeParam = searchParams.get("qrCode")
@@ -24,10 +25,20 @@ export async function GET(req: Request) {
       const qrCode = qrCodeSchema.parse(qrCodeParam)
       const plant = await prisma.plant.findUnique({
         where: { qrCode },
-        include: {
-          product: true,
-          growthLogs: { orderBy: { createdAt: "desc" } },
-          reminders:  { orderBy: { time: "asc" } },
+        select: {
+          id: true,
+          userId: true,
+          seedType: true,
+          stage: true,
+          createdAt: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              seedType: true,
+            },
+          },
         },
       })
 
@@ -35,25 +46,36 @@ export async function GET(req: Request) {
         return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
       }
 
-      const isOwner = plant.userId === payload.userId
+      const isOwner = Boolean(session && plant.userId === session.userId)
 
-      // QR scans can happen outside the owner's dashboard, so non-owners only
-      // receive a minimal view of the plant and product metadata.
+      // QR scans can happen outside the owner's dashboard, so anonymous and
+      // non-owner viewers only receive a minimal public view.
       if (!isOwner) {
+        const publicPlant = { ...plant }
+        delete (publicPlant as { userId?: string }).userId
         return NextResponse.json({
           isOwner,
-          plant: {
-            id: plant.id,
-            seedType: plant.seedType,
-            stage: plant.stage,
-            createdAt: plant.createdAt,
-            product: plant.product,
-          },
+          plant: publicPlant,
         })
       }
 
-      return NextResponse.json({ plant, isOwner })
+      const fullPlant = await prisma.plant.findUnique({
+        where: { qrCode },
+        include: {
+          product: true,
+          growthLogs: { orderBy: { createdAt: "desc" } },
+          reminders:  { orderBy: { time: "asc" } },
+        },
+      })
+
+      if (!fullPlant) {
+        return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
+      }
+
+      return NextResponse.json({ plant: fullPlant, isOwner })
     }
+
+    const payload = await requireSession()
 
     const plants = await prisma.plant.findMany({
       where:   { userId: payload.userId },
@@ -101,6 +123,8 @@ export async function PATCH(req: Request) {
       )
     }
 
+    const nextStage = stage as (typeof VALID_STAGES)[number]
+
     const plant = await prisma.plant.findUnique({ where: { id: plantId } })
     if (!plant) {
       return apiError("Plant not found", 404, "PLANT_NOT_FOUND")
@@ -109,28 +133,52 @@ export async function PATCH(req: Request) {
       return apiError("Forbidden", 403, "FORBIDDEN")
     }
 
-    const updated = await prisma.plant.update({
-      where:   { id: plantId },
-      data:    { stage },
-      include: {
-        product:    true,
-        growthLogs: { orderBy: { createdAt: "desc" } },
-      },
+    if (!isForwardStageTransition(plant.stage, nextStage)) {
+      return apiError(
+        "Plant stage can only move forward one step",
+        409,
+        "INVALID_STAGE_TRANSITION"
+      )
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.plant.updateMany({
+        where: {
+          id: plantId,
+          userId: payload.userId,
+          stage: plant.stage,
+        },
+        data: { stage: nextStage },
+      })
+
+      if (result.count !== 1) {
+        return null
+      }
+
+      const points = getStageRewardPoints(nextStage)
+      if (points > 0) {
+        await tx.leaderboard.upsert({
+          where:  { userId: payload.userId },
+          update: { points: { increment: points } },
+          create: { userId: payload.userId, points },
+        })
+      }
+
+      return tx.plant.findUnique({
+        where:   { id: plantId },
+        include: {
+          product:    true,
+          growthLogs: { orderBy: { createdAt: "desc" } },
+        },
+      })
     })
 
-    // Award leaderboard points per stage
-    const STAGE_POINTS: Record<string, number> = {
-      SPROUT:  10,
-      GROWING: 20,
-      MATURE:  50,
-    }
-    const points = STAGE_POINTS[stage]
-    if (points) {
-      await prisma.leaderboard.upsert({
-        where:  { userId: payload.userId },
-        update: { points: { increment: points } },
-        create: { userId: payload.userId, points },
-      })
+    if (!updated) {
+      return apiError(
+        "Plant stage was updated already",
+        409,
+        "STALE_STAGE_UPDATE"
+      )
     }
 
     return NextResponse.json(updated)

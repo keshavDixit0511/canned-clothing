@@ -34,6 +34,40 @@ enum PaymentStatus {
   FAILED
 }
 
+enum ProductAvailabilityStatus {
+  COMING_SOON
+  IN_STOCK
+  OUT_OF_STOCK
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  NOT_INTERESTED
+  WAITLISTED
+  CONVERTED
+}
+
+enum LeadLikedConcept {
+  YES
+  MAYBE
+  NO
+}
+
+enum LeadWouldRecommend {
+  YES
+  MAYBE
+  NO
+}
+
+enum LeadWillingToPayRange {
+  PRICE_999_1299
+  PRICE_1299_1599
+  PRICE_1599_1999
+  PRICE_1999_PLUS
+}
+
 enum PlantStage {
   SEEDED
   SPROUT
@@ -75,6 +109,7 @@ model Product {
   description String
   price       Float
   stock       Int
+  availabilityStatus ProductAvailabilityStatus @default(IN_STOCK)
 
   activity String
   seedType String
@@ -88,6 +123,7 @@ model Product {
   cartItems  CartItem[]
 
   plants Plant[]
+  interestLeads ProductInterestLead[]
 }
 
 model ProductImage {
@@ -261,6 +297,36 @@ model EcoImpact {
   totalCO2Saved Float
 
   updatedAt DateTime @updatedAt
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT INTEREST LEADS
+//////////////////////////////////////////////////////
+
+model ProductInterestLead {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  name  String
+  email String
+  phone String
+  city  String?
+
+  likedConcept      LeadLikedConcept
+  willingToPayRange LeadWillingToPayRange
+  wouldRecommend    LeadWouldRecommend
+  comment           String?
+
+  status     LeadStatus @default(NEW)
+  adminNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId, status])
+  @@index([createdAt])
 }
 
 //////////////////////////////////////////////////////

@@ -57,14 +57,9 @@ import Image from "next/image"
 import { prisma } from "@/server/db/prisma"
 import { verifyToken } from "@/lib/auth/jwt"
 import { cn } from "@/lib/utils"
+import { getOrderStatusMeta } from "@/lib/order-status"
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  PENDING:    { label: "Pending",    color: "text-amber-400 bg-amber-400/10 border-amber-400/20"       },
-  PROCESSING: { label: "Processing", color: "text-blue-400 bg-blue-400/10 border-blue-400/20"          },
-  SHIPPED:    { label: "Shipped",    color: "text-sky-400 bg-sky-400/10 border-sky-400/20"             },
-  DELIVERED:  { label: "Delivered",  color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
-  CANCELLED:  { label: "Cancelled",  color: "text-red-400 bg-red-400/10 border-red-400/20"             },
-}
+export const dynamic = "force-dynamic"
 
 async function fetchOrdersForUser(userId: string) {
   return prisma.order.findMany({
@@ -153,7 +148,7 @@ export default async function OrdersPage() {
         {orders.length > 0 && (
           <div className="space-y-4">
             {orders.map((order: OrderRecord) => {
-              const s = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.PENDING
+              const s = getOrderStatusMeta(order.status)
               return (
                 <div
                   key={order.id}

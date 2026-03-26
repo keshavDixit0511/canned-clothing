@@ -10,6 +10,8 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/store/cartStore"
 import { getErrorMessage } from "@/lib/error-message"
+import { getProductAvailabilityMeta } from "@/lib/commerce"
+import { InterestForm } from "@/components/product/InterestForm"
 
 interface Product {
   id:          string
@@ -18,6 +20,7 @@ interface Product {
   price:       number
   description: string
   stock:       number
+  availabilityStatus: string
   seedType:    string | null
   activity:    string | null
   images:      { url: string; order: number }[]
@@ -108,7 +111,8 @@ export default function ProductDetailPage() {
 
   if (!product) return null
 
-  const inStock  = product.stock > 0
+  const availability = getProductAvailabilityMeta(product.availabilityStatus, product.stock)
+  const inStock  = availability.purchasable && product.stock > 0
   const maxQty   = Math.min(product.stock, 10)
   const images   = product.images.sort((a, b) => a.order - b.order)
 
@@ -174,6 +178,14 @@ export default function ProductDetailPage() {
                   🌱 Includes {product.seedType} Seeds
                 </span>
               )}
+              <span className={cn(
+                "mb-3 inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
+                availability.badge === "amber" && "border-amber-400/25 bg-amber-400/10 text-amber-300",
+                availability.badge === "emerald" && "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+                availability.badge === "red" && "border-red-400/25 bg-red-400/10 text-red-300",
+              )}>
+                {availability.label}
+              </span>
               <h1
                 className="text-4xl sm:text-5xl text-white leading-none mb-2"
                 style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)" }}
@@ -232,34 +244,38 @@ export default function ProductDetailPage() {
               </p>
             )}
 
-            {/* Add to cart */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={!inStock || adding}
-                className={cn(
-                  "flex-1 rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-300",
-                  "hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0",
-                  added
-                    ? "bg-emerald-600 hover:bg-emerald-600"
-                    : "bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400",
-                  "shadow-lg shadow-emerald-900/30"
-                )}
-              >
-                {adding ? "Adding..." : added ? "✓ Added to Cart!" : inStock ? "Add to Cart" : "Out of Stock"}
-              </button>
+            {inStock ? (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!inStock || adding}
+                  className={cn(
+                    "flex-1 rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-300",
+                    "hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0",
+                    added
+                      ? "bg-emerald-600 hover:bg-emerald-600"
+                      : "bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400",
+                    "shadow-lg shadow-emerald-900/30"
+                  )}
+                >
+                  {adding ? "Adding..." : added ? "✓ Added to Cart!" : "Add to Cart"}
+                </button>
 
-              <Link
-                href="/checkout"
-                className={cn(
-                  "rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-bold text-white/70",
-                  "hover:bg-white/10 hover:text-white transition-all duration-200",
-                  !inStock && "pointer-events-none opacity-30"
-                )}
-              >
-                Buy Now
-              </Link>
-            </div>
+                <Link
+                  href="/checkout"
+                  className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200"
+                >
+                  Buy Now
+                </Link>
+              </div>
+            ) : (
+              <InterestForm
+                productId={product.id}
+                productName={product.name}
+                title={availability.label}
+                subtitle="This product is not purchasable yet. Share your interest and help us validate the concept, price, and launch timing."
+              />
+            )}
 
             {/* Fabric details */}
             <div className="rounded-2xl border border-white/8 bg-white/3 p-5 space-y-3">

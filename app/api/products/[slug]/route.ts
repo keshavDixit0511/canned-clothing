@@ -46,15 +46,14 @@ export async function PATCH(req: Request, { params }: Params) {
 
     const { slug } = await params
     const body = await req.json()
-    const data = updateProductSchema.parse(body)
-    const { images, ...rest } = data
-
-    if (Object.keys(data).length === 0) {
+    if (!body || Object.keys(body).length === 0) {
       return NextResponse.json(
         { error: "At least one field must be provided" },
         { status: 400 }
       )
     }
+    const data = updateProductSchema.parse(body)
+    const { images, ...rest } = data
 
     const product = await prisma.product.update({
       where: { slug },

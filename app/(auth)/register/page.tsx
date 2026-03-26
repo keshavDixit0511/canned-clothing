@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/Card"
 import { Input, PasswordInput } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 
+export const dynamic = "force-dynamic"
+
 export default function RegisterPage() {
   const router = useRouter()
 

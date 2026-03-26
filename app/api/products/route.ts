@@ -5,6 +5,7 @@ import { Prisma }                    from "@prisma/client"
 import { prisma }                    from "@/server/db/prisma"
 import { cookies }                   from "next/headers"
 import { verifyToken }               from "@/lib/auth/jwt"
+import { PRODUCT_AVAILABILITY_STATUSES } from "@/lib/commerce"
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,7 +13,8 @@ export async function GET(req: NextRequest) {
 
     const search   = searchParams.get("search")   ?? ""
     const activity = searchParams.get("activity") ?? ""
-    const sort     = searchParams.get("sort")      ?? "newest"
+    const seedType = searchParams.get("seedType") ?? ""
+    const sort     = searchParams.get("sort")     ?? "newest"
     const page     = parseInt(searchParams.get("page")  ?? "1")
     const limit    = parseInt(searchParams.get("limit") ?? "20")
 
@@ -29,6 +31,10 @@ export async function GET(req: NextRequest) {
     // Filter by activity (Daily Wear, Gym, Work, etc.)
     if (activity && activity !== "all") {
       where.activity = { equals: activity, mode: "insensitive" }
+    }
+
+    if (seedType && seedType !== "all") {
+      where.seedType = { equals: seedType, mode: "insensitive" }
     }
 
     // Sort
@@ -74,11 +80,23 @@ export async function POST(req: NextRequest) {
       description?: string
       price?: string | number
       stock?: string | number
+      availabilityStatus?: string
       activity?: string
       seedType?: string
       images?: Array<{ url: string; order?: number }>
     }
     const { name, slug, description, price, stock, activity, seedType, images } = body
+    const availabilityStatus = body.availabilityStatus
+      ? PRODUCT_AVAILABILITY_STATUSES.includes(
+          body.availabilityStatus as (typeof PRODUCT_AVAILABILITY_STATUSES)[number]
+        )
+        ? body.availabilityStatus
+        : null
+      : "IN_STOCK"
+
+    if (availabilityStatus === null) {
+      return NextResponse.json({ error: "Invalid availability status" }, { status: 400 })
+    }
 
     if (!name || !slug || !description || !price || !activity || !seedType) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -97,6 +115,7 @@ export async function POST(req: NextRequest) {
         // Coerce numeric form inputs safely whether they arrive as strings or numbers.
         price:    Number(price),
         stock:    Number(stock),
+        availabilityStatus,
         activity,
         seedType,
         images: images?.length

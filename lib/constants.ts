@@ -35,7 +35,6 @@ export const PROTECTED_ROUTES = [
   "/cart",
   "/checkout",
   "/orders",
-  "/scan",
 ] as const
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
@@ -56,6 +55,7 @@ export const API = {
   plantLog:       "/api/plant/log",
   plantReminder:  "/api/plant/reminder",
   plantRegister:  "/api/plant/register",
+  profile:        "/api/profile",
   upload:         "/api/upload",
 } as const
 
