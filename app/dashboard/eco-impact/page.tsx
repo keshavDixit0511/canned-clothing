@@ -114,7 +114,7 @@ export default function EcoImpactPage() {
 
   const milestones = [
     { target: 1, label: "First Tin", emoji: "🥇", xp: 100 },
-    { target: 3, label: "Trio Grower", emoji: "🌿", xp: 300 },
+    { target: 3, label: "Trio Member", emoji: "🌿", xp: 300 },
     { target: 5, label: "Eco Enthusiast", emoji: "♻️", xp: 500 },
     { target: 10, label: "Green Pioneer", emoji: "🌳", xp: 1000 },
     { target: 25, label: "Eco Champion", emoji: "🏆", xp: 2500 },
@@ -236,7 +236,7 @@ export default function EcoImpactPage() {
             {[
               { label: "Tins Planted", value: globalTins, suffix: "", color: "#34d399" },
               { label: "KG CO2 Offset", value: globalCo2, suffix: " kg", color: "#a3e635" },
-              { label: "Active Growers", value: 1892, suffix: "", color: "#fbbf24" },
+              { label: "Active Members", value: 1892, suffix: "", color: "#fbbf24" },
             ].map((stat) => (
               <div key={stat.label} className="min-w-0 text-center">
                 <p

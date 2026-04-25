@@ -1,62 +1,65 @@
-// import { NextRequest } from "next/server"
-// import { authMiddleware } from "./server/middleware/auth"
-
-// export function middleware(req: NextRequest) {
-//   return authMiddleware(req)
-// }
-
-// export const config = {
-//   matcher: [
-//     "/dashboard/:path*",
-//     "/cart",
-//     "/checkout",
-//     "/orders",
-//     "/scan/:path*"
-//   ]
-// }
-
-// middleware.ts
-// Edge runtime — CANNOT use Node.js crypto or jsonwebtoken here.
-// Strategy: check cookie EXISTS in middleware (fast, edge-safe).
-// Full JWT verification happens inside each API route / server component
-// via lib/auth.ts → verifyToken (which runs in Node.js runtime).
-
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
+import { clerkMiddleware } from "@clerk/nextjs/server"
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/onboarding",
   "/cart",
   "/checkout",
   "/orders",
+  "/scan",
+  "/api/upload",
+  "/api/profile",
+  "/api/cart",
+  "/api/payment",
+  "/api/orders",
+  "/api/plant",
+  "/api/eco",
+  "/api/leaderboard/me",
 ]
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/register",
+  "/callback",
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/logout",
+]
 
-  const isProtected = PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
-  )
+export default clerkMiddleware(
+  async (auth, request) => {
+    const { pathname } = request.nextUrl
 
-  if (!isProtected) return NextResponse.next()
+    if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"))) {
+      return NextResponse.next()
+    }
 
-  // Edge-safe: just check if the cookie exists
-  const token = req.cookies.get("token")?.value
+    const token = request.cookies.get("token")?.value
+    if (token) {
+      return NextResponse.next()
+    }
 
-  if (!token) {
-    const loginUrl = new URL("/login", req.url)
-    loginUrl.searchParams.set("redirect", pathname)
-    return NextResponse.redirect(loginUrl)
+    const isProtected = PROTECTED_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
+    )
+
+    if (!isProtected) {
+      return NextResponse.next()
+    }
+
+    await auth.protect()
+    return NextResponse.next()
+  },
+  {
+    signInUrl: "/login",
+    signUpUrl: "/register",
   }
-
-  // Token exists → let through. API routes / pages do full verification.
-  return NextResponse.next()
-}
+)
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/cart",
-    "/checkout",
-    "/orders",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
   ],
 }

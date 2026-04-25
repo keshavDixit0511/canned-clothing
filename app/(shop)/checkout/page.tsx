@@ -157,6 +157,38 @@ export default function CheckoutPage() {
     }
   }, [router])
 
+  useEffect(() => {
+    let mounted = true
+
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/profile", { credentials: "include", cache: "no-store" })
+        if (!res.ok) return
+
+        const profile = await res.json()
+        if (!mounted || !profile) return
+
+        setForm((current) => ({
+          ...current,
+          shippingName: profile.name ?? current.shippingName,
+          shippingAddr: profile.addressLine1 ?? current.shippingAddr,
+          shippingCity: profile.city ?? current.shippingCity,
+          shippingState: profile.state ?? current.shippingState,
+          shippingZip: profile.pincode ?? current.shippingZip,
+          shippingCountry: profile.country ?? current.shippingCountry,
+        }))
+      } catch {
+        // Prefill is best-effort.
+      }
+    }
+
+    void fetchProfile()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const subtotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
     [cartItems]
@@ -204,7 +236,7 @@ export default function CheckoutPage() {
         key: paymentResult.key,
         amount: paymentResult.amount ?? 0,
         currency: paymentResult.currency ?? "INR",
-        name: "Canned Clothing",
+        name: "ESTHETIQUE",
         description: `Order ${orderResult.order.id.slice(-6).toUpperCase()}`,
         order_id: paymentResult.rzpOrderId,
         prefill: {

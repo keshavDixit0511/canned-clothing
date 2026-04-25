@@ -1,149 +1,490 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-
+import { useRouter, useSearchParams } from "next/navigation"
+import { useAuth, useSignUp } from "@clerk/nextjs"
+import { Mail, Sparkles } from "lucide-react"
 import { Card } from "@/components/ui/Card"
 import { Input, PasswordInput } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
+import { cn } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
+const OAUTH_CALLBACK_PATH = "/callback"
+
+function safeNextPath(value: string | null) {
+  if (!value) return "/dashboard"
+  const trimmed = value.trim()
+  if (!trimmed || trimmed.startsWith("//") || !trimmed.startsWith("/")) {
+    return "/dashboard"
+  }
+  if (trimmed === "/onboarding") {
+    return "/dashboard"
+  }
+  return trimmed
+}
+
+async function syncClerkSession() {
+  const response = await fetch("/api/auth/clerk-sync", {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to sync Clerk session")
+  }
+
+  return response.json() as Promise<{ needsOnboarding?: boolean }>
+}
+
+function buildRedirectUrl(path: string, nextPath: string) {
+  return `${window.location.origin}${path}?next=${encodeURIComponent(nextPath)}`
+}
+
+function AuthHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300">
+        <Sparkles className="h-3.5 w-3.5" />
+        {eyebrow}
+      </div>
+
+      <div className="space-y-2">
+        <h1
+          className="text-4xl sm:text-5xl text-white leading-none"
+          style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)" }}
+        >
+          {title}
+        </h1>
+        <p className="max-w-lg text-sm text-white/50 sm:text-[15px]">
+          {description}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function SocialButton({
+  label,
+  onClick,
+  disabled,
+  icon,
+}: {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+  icon: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left transition-all duration-200",
+        "hover:border-white/20 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
+      )}
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/80">
+        {icon}
+      </span>
+      <span className="flex-1">
+        <span className="block text-sm font-semibold text-white">{label}</span>
+      </span>
+    </button>
+  )
+}
+
 export default function RegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { isLoaded, isSignedIn } = useAuth()
+  const { signUp, setActive } = useSignUp()
 
-  const [name, setName] = useState("")
+  const [step, setStep] = useState<"form" | "verify">("form")
+  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
+  const redirectingRef = useRef(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const nextPath = safeNextPath(searchParams.get("next") ?? searchParams.get("redirect"))
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || redirectingRef.current) {
+      return
+    }
+
+    redirectingRef.current = true
+
+    void syncClerkSession()
+      .then((result) => {
+        router.replace(
+          result?.needsOnboarding
+            ? `/onboarding?next=${encodeURIComponent(nextPath)}`
+            : nextPath
+        )
+      })
+      .catch(() => {
+        router.replace(`/onboarding?next=${encodeURIComponent(nextPath)}`)
+      })
+  }, [isLoaded, isSignedIn, nextPath, router])
+
+  const startOauth = async (strategy: "oauth_google" | "oauth_apple") => {
+    if (!signUp) return
 
     setError("")
     setLoading(true)
 
-    if (!name || !email || !password) {
-      setError("All fields required")
+    try {
+      await signUp.sso({
+        strategy,
+        redirectUrl: nextPath,
+        redirectCallbackUrl: buildRedirectUrl(OAUTH_CALLBACK_PATH, nextPath),
+      })
+    } catch (cause) {
       setLoading(false)
+      setError(cause instanceof Error ? cause.message : "Social sign-up failed")
+    }
+  }
+
+  const handleEmailSignup = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError("")
+    setNotice("")
+
+    if (!signUp || !setActive) return
+
+    if (!fullName.trim() || !email || !password || !confirmPassword) {
+      setError("Please complete every field.")
       return
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      setLoading(false)
+      setError("Passwords do not match.")
       return
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters")
-      setLoading(false)
+      setError("Password must be at least 8 characters.")
       return
     }
 
+    const [firstName, ...rest] = fullName.trim().split(/\s+/)
+    const lastName = rest.join(" ")
+
+    setLoading(true)
+
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
+      await signUp.password({
+        emailAddress: email.trim(),
+        password,
+        firstName,
+        lastName: lastName || undefined,
+        unsafeMetadata: {
+          fullName: fullName.trim(),
+          authSource: "clerk",
         },
-        body: JSON.stringify({
-          name,
-          email,
-          password
-        })
       })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || "Registration failed")
-        setLoading(false)
+      if (signUp.status === "complete" && signUp.createdSessionId) {
+        await setActive({ session: signUp.createdSessionId })
+        const syncResult = await syncClerkSession().catch(() => null)
+        router.replace(
+          syncResult?.needsOnboarding
+            ? `/onboarding?next=${encodeURIComponent(nextPath)}`
+            : nextPath
+        )
         return
       }
 
-      router.push("/login")
-    } catch {
-      setError("Something went wrong")
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
+      setStep("verify")
+      setNotice(`We sent a verification code to ${email.trim()}.`)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Sign-up failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerification = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError("")
+
+    if (!signUp || !setActive) return
+
+    if (!verificationCode.trim()) {
+      setError("Enter the verification code from your email.")
+      return
     }
 
-    setLoading(false)
+    setLoading(true)
+
+    try {
+      const verified = await signUp.attemptEmailAddressVerification({
+        code: verificationCode.trim(),
+      })
+
+      if (verified.createdSessionId) {
+        await setActive({ session: verified.createdSessionId })
+        const syncResult = await syncClerkSession().catch(() => null)
+        router.replace(
+          syncResult?.needsOnboarding
+            ? `/onboarding?next=${encodeURIComponent(nextPath)}`
+            : nextPath
+        )
+        return
+      }
+
+      setError("We couldn't verify the code. Please try again.")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Verification failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-400/25 border-t-emerald-400" />
+      </div>
+    )
+  }
+
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-400/25 border-t-emerald-400" />
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <Card variant="glow" accent="emerald" className="p-6 sm:p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold font-['Syne'] text-white mb-2">Create Account</h1>
-            <p className="text-sm text-white/50">Join us today to get started</p>
+    <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden px-4 py-8 sm:px-6">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-0 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="absolute right-0 top-1/3 h-56 w-56 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto grid w-full max-w-6xl items-stretch gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <Card variant="glow" accent="emerald" noPadding className="overflow-hidden">
+          <div className="relative h-full p-6 sm:p-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(74,222,128,0.12),transparent_40%),linear-gradient(135deg,rgba(255,255,255,0.02),transparent_45%)]" />
+            <div className="relative flex h-full flex-col justify-between gap-10">
+              <AuthHeader
+                eyebrow="Join the drop"
+                title="Create your ESTHETIQUE account."
+                description="Use one account for orders, style tracking, plant purpose, and the rest of the ESTHETIQUE experience."
+              />
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  "Email access in minutes",
+                  "Google and Apple supported",
+                  "Tied to your plant profile",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-2xl border border-white/8 bg-black/20 px-4 py-4 text-sm text-white/65"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-300/80">
+                      Built to feel native
+                    </p>
+                    <p className="mt-1 text-sm text-white/45">
+                      Same dark palette, same sharp cards, same eco-first voice.
+                    </p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </Card>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <Input
-                label="Full Name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
+        <Card variant="elevated" className="border-white/12 bg-[#07110b]/90 p-6 sm:p-8">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/35">
+                Sign Up
+              </p>
+              <h2 className="font-['Syne'] text-2xl font-bold text-white">
+                Start your account
+              </h2>
+              <p className="text-sm text-white/45">
+                Create an account with email, Google, or Apple.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <SocialButton
+                label="Continue with Google"
+                icon={<span className="text-sm font-black text-emerald-300">G</span>}
+                disabled={loading}
+                onClick={() => void startOauth("oauth_google")}
               />
-
-              <Input
-                label="Email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+              <SocialButton
+                label="Continue with Apple"
+                icon={<span className="text-sm font-black text-white">A</span>}
+                disabled={loading}
+                onClick={() => void startOauth("oauth_apple")}
               />
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/30">
+                Or use email
+              </span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+
+            {step === "form" ? (
+              <form onSubmit={handleEmailSignup} className="space-y-4">
+                <Input
+                  label="Full name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  disabled={loading}
+                  autoComplete="name"
+                  required
+                />
+
+                <Input
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={loading}
+                  autoComplete="email"
+                  required
+                />
+
                 <PasswordInput
                   label="Password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
+                  disabled={loading}
+                  autoComplete="new-password"
                   required
                 />
 
                 <PasswordInput
-                  label="Confirm"
+                  label="Confirm password"
                   placeholder="••••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  disabled={loading}
+                  autoComplete="new-password"
                   required
                 />
-              </div>
-            </div>
 
-            {error && (
-              <div className="p-3 rounded-xl bg-red-400/10 border border-red-400/20 text-red-400 text-sm text-center">
-                {error}
-              </div>
+                {error && (
+                  <div className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="eco"
+                  size="lg"
+                  fullWidth
+                  loading={loading}
+                  className="mt-2"
+                >
+                  Create Account
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerification} className="space-y-4">
+                <Input
+                  label="Verification code"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="123456"
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value)}
+                  disabled={loading}
+                  autoComplete="one-time-code"
+                  required
+                  hint={notice || "Check your email for the code."}
+                />
+
+                {error && (
+                  <div className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    type="submit"
+                    variant="eco"
+                    size="lg"
+                    fullWidth
+                    loading={loading}
+                  >
+                    Verify and continue
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    fullWidth
+                    disabled={loading}
+                    onClick={() => {
+                      setStep("form")
+                      setVerificationCode("")
+                      setNotice("")
+                    }}
+                  >
+                    Edit details
+                  </Button>
+                </div>
+              </form>
             )}
 
-            <Button
-              type="submit"
-              variant="eco"
-              size="lg"
-              fullWidth
-              loading={loading}
-              className="mt-2"
-            >
-              Create Account
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center text-sm text-white/50">
-            Already have an account?{" "}
-            <Link href="/login" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
-              Sign in
-            </Link>
+            <div className="text-center text-sm text-white/50">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
         </Card>
       </div>

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET(_req: Request, { params }: Params) {
   try {
-    await requireAdminSession()
+    await requireAdminSession(_req)
     const { id } = await params
 
     const lead = await prisma.productInterestLead.findUnique({
@@ -43,7 +43,7 @@ export async function GET(_req: Request, { params }: Params) {
 
 export async function PATCH(req: Request, { params }: Params) {
   try {
-    await requireAdminSession()
+    await requireAdminSession(req)
     const { id } = await params
     const body = await req.json()
     const data = updateProductInterestLeadSchema.parse(body)

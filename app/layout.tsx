@@ -1,54 +1,62 @@
 import type { Metadata, Viewport } from "next"
 import type { CSSProperties } from "react"
+import { ClerkProvider } from "@clerk/nextjs"
 import { LayoutShell } from "@/components/layout/LayoutShell"
 import { ToastProvider } from "@/components/ui/Toast"
+import { APP_NAME, APP_SEO_DESCRIPTION, APP_TAGLINE, APP_URL } from "@/lib/constants"
 import "./globals.css"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: {
-    default: "ALUM & EARTH - DK | Wear it. Plant it. Grow it.",
-    template: "%s | ALUM & EARTH",
+    default: `${APP_NAME} | ${APP_TAGLINE}`,
+    template: `%s | ${APP_NAME}`,
   },
-  description:
-    "Premium bamboo-spandex performance shirts delivered in a brushed aluminum tin - with seeds inside. Wear it. Plant it. Track your growth.",
+  description: APP_SEO_DESCRIPTION,
   keywords: [
+    "ESTHETIQUE",
+    "eco friendly clothing",
     "sustainable fashion",
-    "bamboo shirt",
-    "eco clothing",
-    "plant kit",
-    "DK",
-    "ALUM AND EARTH",
-    "seeded tin",
-    "eco friendly t-shirt",
-    "India",
+    "clothing brand",
+    "style meets purpose",
+    "plantable clothing",
+    "eco friendly apparel",
+    "bamboo clothing",
+    "seeded packaging",
+    "ethical fashion",
+    "sustainable style",
+    "plant purpose clothing",
   ],
-  authors: [{ name: "ALUM & EARTH" }],
-  creator: "ALUM & EARTH",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_URL ?? "https://alumandearth.com"),
+  authors: [{ name: APP_NAME }],
+  creator: APP_NAME,
+  metadataBase: new URL(APP_URL),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: process.env.NEXT_PUBLIC_URL ?? "https://alumandearth.com",
-    siteName: "ALUM & EARTH - DK",
-    title: "ALUM & EARTH - DK | Wear it. Plant it. Grow it.",
-    description: "Premium shirts in brushed aluminum tins - with seeds inside.",
+    url: APP_URL,
+    siteName: APP_NAME,
+    title: `${APP_NAME} | ${APP_TAGLINE}`,
+    description: APP_SEO_DESCRIPTION,
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "ALUM & EARTH - DK",
+        alt: `${APP_NAME} | ${APP_TAGLINE}`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ALUM & EARTH - DK",
-    description: "Wear it. Plant it. Grow it.",
+    title: `${APP_NAME} | ${APP_TAGLINE}`,
+    description: APP_SEO_DESCRIPTION,
     images: ["/og-image.jpg"],
   },
+  category: "Fashion",
   robots: {
     index: true,
     follow: true,
@@ -78,10 +86,47 @@ export default function RootLayout({
 
   return (
     <html lang="en" style={fontVars} suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: APP_NAME,
+                url: APP_URL,
+                description: APP_SEO_DESCRIPTION,
+                slogan: APP_TAGLINE,
+                sameAs: [],
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: APP_NAME,
+                url: APP_URL,
+                description: APP_SEO_DESCRIPTION,
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: `${APP_URL}/products?search={search_term_string}`,
+                  "query-input": "required name=search_term_string",
+                },
+              },
+            ]),
+          }}
+        />
+      </head>
       <body className="bg-[#060a06] text-white antialiased font-sans" suppressHydrationWarning>
-        <ToastProvider>
-          <LayoutShell>{children}</LayoutShell>
-        </ToastProvider>
+        <ClerkProvider
+          signInUrl="/login"
+          signUpUrl="/register"
+          afterSignInUrl="/onboarding"
+          afterSignUpUrl="/onboarding"
+        >
+          <ToastProvider>
+            <LayoutShell>{children}</LayoutShell>
+          </ToastProvider>
+        </ClerkProvider>
       </body>
     </html>
   )

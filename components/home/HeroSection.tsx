@@ -1,4 +1,4 @@
-// components/home/HeroSection.tsx
+﻿// components/home/HeroSection.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -6,7 +6,7 @@ import Link from "next/link"
 import { FloatingParticles } from "./FloatingParticles"
 import ThreeDTin from "../visual/ThreeDTin"
 
-// Three.js must NOT run on the server — dynamic import with ssr: false
+// Three.js must NOT run on the server â€” dynamic import with ssr: false
 const WORDS = ["Performance.", "Sustainability.", "Growth."]
 
 export function HeroSection() {
@@ -63,7 +63,7 @@ export function HeroSection() {
       <div className="relative z-10 mx-auto max-w-7xl px-6 w-full pt-24 pb-16">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-          {/* ── Text ── */}
+          {/* â”€â”€ Text â”€â”€ */}
           <div className="space-y-8">
 
             {/* Eyebrow */}
@@ -80,7 +80,7 @@ export function HeroSection() {
                 className="text-xs font-semibold tracking-[0.2em] text-emerald-400 uppercase"
                 style={{ fontFamily: "var(--font-dm, 'DM Sans', sans-serif)" }}
               >
-                Industrial Zen · DK Collection
+                ESTHETIQUE · Sustainable fashion
               </span>
             </div>
 
@@ -149,10 +149,10 @@ export function HeroSection() {
                 transition: "all 0.7s ease 0.45s",
               }}
             >
-              Premium bamboo-spandex performance wear delivered in a brushed aluminum tin.
-              Unbox your shirt. Plant the growth kit inside. Track your plant&apos;s journey online.{" "}
+              ESTHETIQUE creates eco-friendly clothing that blends modern style with plant purpose.
+              Discover sustainable fashion designed for everyday wear and low-waste living.{" "}
               <span className="text-white/65">
-                Zero plastic. Zero waste. One tin — infinite purpose.
+                Thoughtful materials. Clean design. Clothing that does more.
               </span>
             </p>
 
@@ -186,7 +186,7 @@ export function HeroSection() {
                 className="rounded-2xl border border-white/12 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white/70 backdrop-blur-sm hover:border-white/25 hover:text-white transition-all duration-200"
                 style={{ fontFamily: "var(--font-dm, 'DM Sans', sans-serif)" }}
               >
-                View Plant Portal →
+                View Plant Portal â†’
               </Link>
             </div>
 
@@ -199,9 +199,9 @@ export function HeroSection() {
               }}
             >
               {[
-                { icon: "🌿", text: "Bamboo-Spandex Fabric" },
-                { icon: "♻️",  text: "Zero Plastic Packaging" },
-                { icon: "🇮🇳", text: "Made in India" },
+                { icon: "🌿", text: "Eco-Friendly Materials" },
+                { icon: "♻️",  text: "Low-Waste Packaging" },
+                { icon: "ðŸ‡®ðŸ‡³", text: "Made in India" },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-1.5">
                   <span className="text-sm">{item.icon}</span>
@@ -216,7 +216,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* ── 3D Scene ── */}
+          {/* â”€â”€ 3D Scene â”€â”€ */}
           <div
             className="flex items-center justify-center"
             style={{

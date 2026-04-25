@@ -5,19 +5,31 @@ export const dynamic = "force-dynamic"
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useClerk } from "@clerk/nextjs"
 import { cn } from "@/lib/utils"
 import { getErrorMessage } from "@/lib/error-message"
+import { getDisplayName, getInitials } from "@/lib/profile"
 
 interface ProfileData {
-  name:  string
-  email: string
+  name:  string | null
+  firstName?: string | null
+  lastName?: string | null
+  email: string | null
   image: string | null
   role:  string
+  gender?: string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  state?: string | null
+  country?: string | null
+  pincode?: string | null
+  onboardingCompleted?: boolean
+  authProvider?: "local" | "clerk"
 }
 
 export default function ProfilePage() {
-  const router = useRouter()
+  const { signOut } = useClerk()
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -96,11 +108,21 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" })
-    router.push("/login")
+    try {
+      await signOut({ redirectUrl: "/login" })
+    } catch {
+      window.location.assign("/login")
+    }
   }
 
-  const initials = profile?.name
-    .split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") ?? "?"
+  const displayName = getDisplayName({
+    name: profile?.name ?? null,
+    firstName: profile?.firstName ?? null,
+    lastName: profile?.lastName ?? null,
+    email: profile?.email ?? null,
+  })
+
+  const initials = getInitials(displayName, "EU")
 
   if (loading) return (
     <div className="min-h-screen bg-[#060a06] flex items-center justify-center">
@@ -127,13 +149,13 @@ export default function ProfilePage() {
             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/8 text-xl font-black text-white/70"
               style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: 24 }}>
               {profile?.image
-                ? <Image src={profile.image} alt={profile.name} fill sizes="64px" className="object-cover" />
+                ? <Image src={profile.image} alt={displayName} fill sizes="64px" className="object-cover" />
                 : initials
               }
             </div>
             <div>
               <p className="font-['Bebas_Neue',_sans-serif] text-2xl text-white leading-none">
-                {profile?.name}
+                {displayName}
               </p>
               <p className="text-sm text-white/40 mt-0.5">{profile?.email}</p>
               <span className={cn(
@@ -142,7 +164,7 @@ export default function ProfilePage() {
                   ? "border-purple-400/30 bg-purple-400/10 text-purple-400"
                   : "border-emerald-400/20 bg-emerald-400/8 text-emerald-400"
               )}>
-                {profile?.role === "ADMIN" ? "⚡ Admin" : "🌱 Grower"}
+                {profile?.role === "ADMIN" ? "⚡ Admin" : "🌱 Member"}
               </span>
             </div>
           </div>
@@ -183,35 +205,44 @@ export default function ProfilePage() {
         </div>
 
         {/* Change password */}
-        <div className="rounded-2xl border border-white/8 bg-white/3 p-6 space-y-4">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/30">Change Password</p>
+        {profile?.authProvider === "clerk" ? (
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-6 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/30">Password</p>
+            <p className="text-sm text-white/45">
+              This account is managed by Clerk, so password changes happen through the Clerk session instead of this app.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-6 space-y-4">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/30">Change Password</p>
 
-          {[
-            { label: "Current Password",  value: currPw, set: setCurrPw },
-            { label: "New Password",       value: newPw,  set: setNewPw  },
-            { label: "Confirm New",        value: confPw, set: setConfPw },
-          ].map((f) => (
-            <input
-              key={f.label}
-              type="password"
-              value={f.value}
-              onChange={(e) => f.set(e.target.value)}
-              placeholder={f.label}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 placeholder:text-white/25 focus:outline-none focus:border-emerald-400/40 transition-colors"
-            />
-          ))}
+            {[
+              { label: "Current Password",  value: currPw, set: setCurrPw },
+              { label: "New Password",       value: newPw,  set: setNewPw  },
+              { label: "Confirm New",        value: confPw, set: setConfPw },
+            ].map((f) => (
+              <input
+                key={f.label}
+                type="password"
+                value={f.value}
+                onChange={(e) => f.set(e.target.value)}
+                placeholder={f.label}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 placeholder:text-white/25 focus:outline-none focus:border-emerald-400/40 transition-colors"
+              />
+            ))}
 
-          {pwError   && <p className="text-xs text-red-400">{pwError}</p>}
-          {pwSuccess && <p className="text-xs text-emerald-400">✓ Password updated</p>}
+            {pwError   && <p className="text-xs text-red-400">{pwError}</p>}
+            {pwSuccess && <p className="text-xs text-emerald-400">✓ Password updated</p>}
 
-          <button
-            onClick={handleChangePassword}
-            disabled={pwSaving || !currPw || !newPw || !confPw}
-            className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {pwSaving ? "Updating..." : "Update Password"}
-          </button>
-        </div>
+            <button
+              onClick={handleChangePassword}
+              disabled={pwSaving || !currPw || !newPw || !confPw}
+              className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {pwSaving ? "Updating..." : "Update Password"}
+            </button>
+          </div>
+        )}
 
         {/* Danger zone */}
         <div className="rounded-2xl border border-red-400/15 bg-red-400/5 p-6 space-y-3">

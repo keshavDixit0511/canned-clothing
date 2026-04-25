@@ -6,7 +6,7 @@ import { apiError, apiSuccess } from "@/lib/api-response"
 
 export async function POST(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
     const data = addGrowthLogSchema.parse(body)
 

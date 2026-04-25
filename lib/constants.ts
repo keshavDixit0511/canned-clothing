@@ -1,7 +1,9 @@
 // ─── App Meta ─────────────────────────────────────────────────────────────────
 
-export const APP_NAME    = "Canned Clothing"
-export const APP_TAGLINE = "Wear it. Plant it. Grow it."
+export const APP_NAME    = "ESTHETIQUE"
+export const APP_TAGLINE = "Where style meets purpose."
+export const APP_SEO_DESCRIPTION =
+  "ESTHETIQUE is an eco-friendly clothing brand where style meets purpose, blending sustainable fashion, plant-based impact, and modern everyday wear."
 export const APP_URL     = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET(req: NextRequest) {
   try {
-    await requireAdminSession()
+    await requireAdminSession(req)
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get("status")

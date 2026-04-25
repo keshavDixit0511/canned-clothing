@@ -16,9 +16,9 @@ async function getOrCreateCart(userId: string) {
 
 // ─── GET /api/cart ─────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
 
     const cart = await prisma.cart.findUnique({
       where: { userId: payload.userId },
@@ -52,7 +52,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
     const { productId, quantity } = addToCartSchema.parse(body)
 
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
     const { productId, quantity } = updateCartItemSchema.parse(body)
 
@@ -148,7 +148,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
     const { productId } = removeCartItemSchema.parse(body)
 

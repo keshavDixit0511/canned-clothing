@@ -145,7 +145,7 @@ export function LeaderboardSection() {
                   className="text-xs font-bold text-white/40 uppercase tracking-wider"
                   style={{ fontFamily: "var(--font-dm, 'DM Sans', sans-serif)" }}
                 >
-                  Top Growers
+                  Top Members
                 </span>
                 <span
                   className="flex items-center gap-1.5 text-xs text-emerald-400"

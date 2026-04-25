@@ -16,7 +16,7 @@ const VALID_STAGES = ["SEEDED", "SPROUT", "GROWING", "MATURE"] as const
 
 export async function GET(req: Request) {
   try {
-    const session = await getSession()
+    const session = await getSession(req)
 
     const { searchParams } = new URL(req.url)
     const qrCodeParam = searchParams.get("qrCode")
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ plant: fullPlant, isOwner })
     }
 
-    const payload = await requireSession()
+    const payload = await requireSession(req)
 
     const plants = await prisma.plant.findMany({
       where:   { userId: payload.userId },
@@ -107,7 +107,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body    = await req.json()
     const { plantId, stage } = body
 

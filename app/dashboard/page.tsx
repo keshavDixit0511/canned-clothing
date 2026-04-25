@@ -8,9 +8,17 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useCountUp } from "@/hooks"
 import { getOrderStatusMeta } from "@/lib/order-status"
+import { getDisplayName } from "@/lib/profile"
 
 interface DashboardData {
-  profile: { name: string; image: string | null }
+  profile: {
+    name: string | null
+    firstName: string | null
+    lastName: string | null
+    email: string | null
+    image: string | null
+    onboardingCompleted?: boolean
+  }
   eco: { treesPlanted: number; orders: number; ecoScore: number }
   leaderboard: { points: number; rank: number | null }
   plants: { id: string; seedType: string; stage: string; createdAt: string }[]
@@ -104,7 +112,7 @@ export default function DashboardPage() {
         ])
 
         const [profile, eco, leaderboard, plants, orders] = await Promise.all([
-          profileRes.ok ? profileRes.json() : { name: "Grower", image: null },
+          profileRes.ok ? profileRes.json() : { name: null, firstName: null, lastName: null, email: null, image: null },
           ecoRes.ok ? ecoRes.json() : { treesPlanted: 0, orders: 0, ecoScore: 0 },
           lbRes.ok ? lbRes.json() : { points: 0, rank: null },
           plantsRes.ok ? plantsRes.json() : [],
@@ -160,7 +168,12 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400">{greeting}</p>
           <h1 className="font-['Bebas_Neue',_sans-serif] text-4xl leading-none text-white sm:text-5xl">
-            {data?.profile.name ?? "Grower"} 👋
+            {getDisplayName({
+              name: data?.profile.name ?? null,
+              firstName: data?.profile.firstName ?? null,
+              lastName: data?.profile.lastName ?? null,
+              email: data?.profile.email ?? null,
+            })} 👋
           </h1>
           <p className="text-sm text-white/40">Here&apos;s how your garden is doing today.</p>
         </div>

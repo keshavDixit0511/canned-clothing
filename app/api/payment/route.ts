@@ -26,7 +26,7 @@ function getRazorpayClient() {
 
 export async function POST(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
     const { orderId } = body
 
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
 
     const {

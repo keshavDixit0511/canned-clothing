@@ -161,6 +161,11 @@ function ToastItem({
  */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const addToast = useCallback((options: Omit<Toast, "id">) => {
     // UUIDs keep toast ids stable without relying on render-time randomness.
@@ -180,7 +185,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     info:    (title, message) => addToast({ type: "info",    title, message }),
   }
 
-  const portalTarget = typeof document === "undefined" ? null : document.body
+  const portalTarget = mounted ? document.body : null
 
   return (
     <ToastContext.Provider value={ctx}>

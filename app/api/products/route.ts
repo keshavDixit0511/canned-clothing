@@ -3,9 +3,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Prisma }                    from "@prisma/client"
 import { prisma }                    from "@/server/db/prisma"
-import { cookies }                   from "next/headers"
-import { verifyToken }               from "@/lib/auth/jwt"
-import { PRODUCT_AVAILABILITY_STATUSES } from "@/lib/commerce"
+import { requireAdminSession }       from "@/lib/auth"
+import { PRODUCT_AVAILABILITY_STATUSES, type ProductAvailabilityStatus } from "@/lib/commerce"
 
 export async function GET(req: NextRequest) {
   try {
@@ -63,13 +62,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get("token")?.value
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const payload = verifyToken(token)
+    const payload = await requireAdminSession(req)
     if (payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -88,11 +81,11 @@ export async function POST(req: NextRequest) {
     const { name, slug, description, price, stock, activity, seedType, images } = body
     const availabilityStatus = body.availabilityStatus
       ? PRODUCT_AVAILABILITY_STATUSES.includes(
-          body.availabilityStatus as (typeof PRODUCT_AVAILABILITY_STATUSES)[number]
+          body.availabilityStatus as ProductAvailabilityStatus
         )
-        ? body.availabilityStatus
+        ? (body.availabilityStatus as ProductAvailabilityStatus)
         : null
-      : "IN_STOCK"
+      : ("IN_STOCK" as ProductAvailabilityStatus)
 
     if (availabilityStatus === null) {
       return NextResponse.json({ error: "Invalid availability status" }, { status: 400 })

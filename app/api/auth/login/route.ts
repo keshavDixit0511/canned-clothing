@@ -1,6 +1,7 @@
 // app/api/auth/login/route.ts
 
 import { NextResponse } from "next/server"
+import { clerkClient } from "@clerk/nextjs/server"
 import { prisma } from "@/server/db/prisma"
 import { comparePassword } from "@/lib/auth/password"
 import { signToken } from "@/lib/auth/jwt"
@@ -35,10 +36,57 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      authProvider: "local",
     })
+
+    let clerkSignInToken: string | null = null
+    try {
+      const clerk = await clerkClient()
+      const clerkUsers = await clerk.users.getUserList({
+        emailAddress: [user.email],
+      })
+      const nameParts = (user.name ?? "").trim().split(/\s+/).filter(Boolean)
+      const firstName = nameParts[0] || undefined
+      const lastName = nameParts.slice(1).join(" ") || undefined
+
+      const clerkUser = clerkUsers.data[0]
+        ? await clerk.users.updateUser(clerkUsers.data[0].id, {
+            firstName,
+            lastName,
+            password: data.password,
+            skipPasswordChecks: true,
+          })
+        : await clerk.users.createUser({
+            emailAddress: [user.email],
+            password: data.password,
+            firstName,
+            lastName,
+            skipPasswordChecks: true,
+          })
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          clerkUserId: clerkUser.id,
+          firstName: firstName || null,
+          lastName: lastName || null,
+        },
+      })
+
+      const signInToken = await clerk.signInTokens.createSignInToken({
+        userId: clerkUser.id,
+        expiresInSeconds: 600,
+      })
+
+      clerkSignInToken = signInToken.token
+    } catch (clerkError) {
+      console.warn("CLERK_LOGIN_BRIDGE_FAILED", clerkError)
+    }
 
     const res = NextResponse.json({
       message: "Login successful",
+      token,
+      clerkSignInToken,
       user: {
         id: user.id,
         name: user.name,

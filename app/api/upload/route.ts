@@ -3,13 +3,22 @@
 import { NextResponse } from "next/server"
 import { requireSession, isAuthError } from "@/lib/auth"
 import { uploadFile } from "@/services/storage/s3"
+import { saveLocalUpload } from "@/services/storage/local"
+
+function isPermanentRedirect(error: unknown) {
+  return (
+    error instanceof Error &&
+    (error.name === "PermanentRedirect" ||
+      (error as { Code?: string }).Code === "PermanentRedirect")
+  )
+}
 
 export async function POST(req: Request) {
   try {
     // ── Auth check ────────────────────────────────────────────────────────────
     // Uploads are authenticated because growth logs and product media should
     // never accept anonymous writes from the browser.
-    await requireSession()
+    await requireSession(req)
 
     // ── File validation ───────────────────────────────────────────────────────
     const formData = await req.formData()
@@ -38,11 +47,38 @@ export async function POST(req: Request) {
     // ── Upload ────────────────────────────────────────────────────────────────
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    const url = await uploadFile({
+    const uploadInput = {
       buffer,
       filename: file.name,
-      type:     file.type,
-    })
+      type: file.type,
+    }
+
+    const shouldUseLocalUpload =
+      process.env.UPLOAD_STORAGE === "local" ||
+      !process.env.AWS_ACCESS_KEY_ID ||
+      !process.env.AWS_SECRET_ACCESS_KEY ||
+      !process.env.S3_BUCKET_NAME ||
+      process.env.AWS_ACCESS_KEY_ID === "your_key" ||
+      process.env.AWS_SECRET_ACCESS_KEY === "your_secret" ||
+      process.env.S3_BUCKET_NAME === "your_bucket"
+
+    let url: string
+    if (shouldUseLocalUpload && process.env.NODE_ENV !== "production") {
+      url = await saveLocalUpload(uploadInput)
+    } else {
+      try {
+        url = await uploadFile(uploadInput)
+      } catch (error) {
+        if (
+          process.env.NODE_ENV !== "production" &&
+          isPermanentRedirect(error)
+        ) {
+          url = await saveLocalUpload(uploadInput)
+        } else {
+          throw error
+        }
+      }
+    }
 
     return NextResponse.json({ url })
   } catch (error) {

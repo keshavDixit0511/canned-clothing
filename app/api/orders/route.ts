@@ -18,9 +18,9 @@ type CartItemRecord = NonNullable<CartResult>["items"][number]
 
 // ─── GET /api/orders ───────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
 
     const orders = await prisma.order.findMany({
       where: { userId: payload.userId },
@@ -55,7 +55,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
 
     // Validates all shipping fields + paymentProvider

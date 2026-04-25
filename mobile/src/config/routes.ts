@@ -1,0 +1,37 @@
+export const ROUTES = {
+  home: "/home",
+  login: "/login",
+  register: "/register",
+  shop: "/shop",
+  grow: "/grow",
+  impact: "/impact",
+  account: "/account",
+  cart: "/cart",
+  checkout: "/checkout",
+  orders: "/orders",
+  scan: (code: string) => `/scan/${code}`,
+  product: (slug: string) => `/product/${slug}`,
+} as const
+
+export const API = {
+  auth: {
+    login: "/api/auth/login",
+    register: "/api/auth/register",
+    logout: "/api/auth/logout",
+  },
+  products: "/api/products",
+  product: (slug: string) => `/api/products/${slug}`,
+  cart: "/api/cart",
+  orders: "/api/orders",
+  payment: "/api/payment",
+  plants: "/api/plant",
+  plantRegister: "/api/plant/register",
+  plantLog: "/api/plant/log",
+  plantReminder: "/api/plant/reminder",
+  profile: "/api/profile",
+  profilePassword: "/api/profile/password",
+  eco: "/api/eco",
+  leaderboard: "/api/leaderboard",
+  leaderboardMe: "/api/leaderboard/me",
+  leads: "/api/leads",
+} as const

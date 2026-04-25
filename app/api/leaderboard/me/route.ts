@@ -3,9 +3,9 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/server/db/prisma"
 import { getSession } from "@/lib/auth"
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getSession()
+    const session = await getSession(req)
     if (!session) {
       return NextResponse.json({ points: 0, rank: null })
     }

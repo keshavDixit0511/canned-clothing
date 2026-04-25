@@ -7,7 +7,7 @@ import { apiError, apiSuccess } from "@/lib/api-response"
 
 export async function POST(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
     const body = await req.json()
     const data = createReminderSchema.parse(body)
     const reminderTime = new Date(data.time)
@@ -64,9 +64,9 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const payload = await requireSession()
+    const payload = await requireSession(req)
 
     const reminders = await prisma.reminder.findMany({
       where: { userId: payload.userId },

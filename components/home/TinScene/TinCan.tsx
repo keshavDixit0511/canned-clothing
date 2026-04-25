@@ -1,8 +1,8 @@
-// components/home/TinScene/tinCan.ts
+﻿// components/home/TinScene/tinCan.ts
 
 import * as THREE from "three"
 
-// ─── Canvas texture for the label band ────────────────────────────────────────
+// â”€â”€â”€ Canvas texture for the label band â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeLabelTexture(): THREE.CanvasTexture {
   const W = 1024
@@ -12,7 +12,7 @@ function makeLabelTexture(): THREE.CanvasTexture {
   cv.height = H
   const ctx = cv.getContext("2d")!
 
-  // ── Background: deep charcoal with subtle grain ──────────────────────────
+  // â”€â”€ Background: deep charcoal with subtle grain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ctx.fillStyle = "#0a0f0a"
   ctx.fillRect(0, 0, W, H)
 
@@ -26,7 +26,7 @@ function makeLabelTexture(): THREE.CanvasTexture {
     ctx.stroke()
   }
 
-  // ── Top thin accent line ──────────────────────────────────────────────────
+  // â”€â”€ Top thin accent line â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const topGrad = ctx.createLinearGradient(0, 0, W, 0)
   topGrad.addColorStop(0,    "transparent")
   topGrad.addColorStop(0.2,  "#34d399")
@@ -39,7 +39,7 @@ function makeLabelTexture(): THREE.CanvasTexture {
   ctx.lineTo(W, 72)
   ctx.stroke()
 
-  // ── Bottom thin accent line ───────────────────────────────────────────────
+  // â”€â”€ Bottom thin accent line â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ctx.strokeStyle = topGrad
   ctx.lineWidth   = 2.5
   ctx.beginPath()
@@ -47,7 +47,7 @@ function makeLabelTexture(): THREE.CanvasTexture {
   ctx.lineTo(W, H - 72)
   ctx.stroke()
 
-  // ── "DK" monogram — center ────────────────────────────────────────────────
+  // â”€â”€ "DK" monogram â€” center â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ctx.textAlign    = "center"
   ctx.textBaseline = "middle"
 
@@ -64,7 +64,7 @@ function makeLabelTexture(): THREE.CanvasTexture {
   ctx.fillStyle  = "#f0f4f0"
   ctx.fillText("DK", W / 2, H / 2 - 18)
 
-  // ── Divider line ──────────────────────────────────────────────────────────
+  // â”€â”€ Divider line â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const divGrad = ctx.createLinearGradient(W * 0.3, 0, W * 0.7, 0)
   divGrad.addColorStop(0,   "transparent")
   divGrad.addColorStop(0.5, "#34d399")
@@ -76,13 +76,13 @@ function makeLabelTexture(): THREE.CanvasTexture {
   ctx.lineTo(W * 0.7, H / 2 + 68)
   ctx.stroke()
 
-  // ── "ALUM & EARTH" subtitle ───────────────────────────────────────────────
+  // ESTHETIQUE subtitle
   ctx.fillStyle  = "rgba(52,211,153,0.75)"
   ctx.font       = "500 22px Arial, sans-serif"
   ctx.letterSpacing = "8px"
-  ctx.fillText("ALUM  &  EARTH", W / 2, H / 2 + 102)
+  ctx.fillText("ESTHETIQUE", W / 2, H / 2 + 102)
 
-  // ── Small seed icon dots ──────────────────────────────────────────────────
+  // â”€â”€ Small seed icon dots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const dotPositions = [W * 0.28, W * 0.5, W * 0.72]
   dotPositions.forEach((x) => {
     ctx.beginPath()
@@ -94,7 +94,7 @@ function makeLabelTexture(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(cv)
 }
 
-// ─── Canvas texture for the tin lid ──────────────────────────────────────────
+// â”€â”€â”€ Canvas texture for the tin lid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeLidTexture(): THREE.CanvasTexture {
   const S  = 512
@@ -129,7 +129,7 @@ function makeLidTexture(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(cv)
 }
 
-// ─── Normal map for brushed metal look ────────────────────────────────────────
+// â”€â”€â”€ Normal map for brushed metal look â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeBrushNormalTexture(): THREE.CanvasTexture {
   const W = 512
@@ -139,7 +139,7 @@ function makeBrushNormalTexture(): THREE.CanvasTexture {
   cv.height = H
   const ctx = cv.getContext("2d")!
 
-  // Horizontal brush strokes → encodes as normal map blue-ish base
+  // Horizontal brush strokes â†’ encodes as normal map blue-ish base
   ctx.fillStyle = "#8080ff" // flat normal pointing forward
   ctx.fillRect(0, 0, W, H)
 
@@ -153,7 +153,7 @@ function makeBrushNormalTexture(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(cv)
 }
 
-// ─── buildTinCan ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ buildTinCan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface TinCanGroup {
   group:       THREE.Group
@@ -168,7 +168,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   const lidTex    = makeLidTexture()
   const brushNorm = makeBrushNormalTexture()
 
-  // ── Shared metal material (body without label) ────────────────────────────
+  // â”€â”€ Shared metal material (body without label) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const metalMat = new THREE.MeshStandardMaterial({
     color:     0xc8cec8,
     metalness: 0.96,
@@ -179,7 +179,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
     normalScale:     new THREE.Vector2(0.4, 0.4),
   })
 
-  // ── Label band material ───────────────────────────────────────────────────
+  // â”€â”€ Label band material â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const labelMat = new THREE.MeshStandardMaterial({
     map:       labelTex,
     metalness: 0.2,
@@ -188,7 +188,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
     envMapIntensity: 0.6,
   })
 
-  // ── Lid material ─────────────────────────────────────────────────────────
+  // â”€â”€ Lid material â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const lidMat = new THREE.MeshStandardMaterial({
     map:       lidTex,
     metalness: 0.92,
@@ -197,7 +197,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
     envMapIntensity: 1.2,
   })
 
-  // ── Cylinder body (tall) ─────────────────────────────────────────────────
+  // â”€â”€ Cylinder body (tall) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Using 3 separate meshes: top metal strip, label band, bottom metal strip
   const RAD    = 0.72
   const HEIGHT = 2.2
@@ -218,7 +218,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   topMesh.receiveShadow = true
   group.add(topMesh)
 
-  // Label band — center 64% of height
+  // Label band â€” center 64% of height
   const labelH   = HEIGHT * 0.64
   const labelGeo = new THREE.CylinderGeometry(RAD + 0.002, RAD + 0.002, labelH, 64, 1, true)
   const labelMesh = new THREE.Mesh(labelGeo, labelMat)
@@ -226,7 +226,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   labelMesh.receiveShadow = true
   group.add(labelMesh)
 
-  // ── Top lid ──────────────────────────────────────────────────────────────
+  // â”€â”€ Top lid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const lidTopGeo  = new THREE.CylinderGeometry(RAD, RAD, 0.055, 64)
   const lidTopMesh = new THREE.Mesh(lidTopGeo, lidMat)
   lidTopMesh.position.y = HEIGHT * 0.5 + 0.028
@@ -240,7 +240,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   lipMesh.rotation.x = Math.PI / 2
   group.add(lipMesh)
 
-  // ── Bottom cap ───────────────────────────────────────────────────────────
+  // â”€â”€ Bottom cap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const capGeo  = new THREE.CylinderGeometry(RAD - 0.02, RAD - 0.02, 0.04, 64)
   const capMesh = new THREE.Mesh(capGeo, lidMat)
   capMesh.position.y = -(HEIGHT * 0.5) - 0.02
@@ -253,7 +253,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   botLipMesh.rotation.x = Math.PI / 2
   group.add(botLipMesh)
 
-  // ── Pull tab ─────────────────────────────────────────────────────────────
+  // â”€â”€ Pull tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const tabGroup = new THREE.Group()
 
   // Tab ring
@@ -286,7 +286,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   tabGroup.rotation.x = -0.3
   group.add(tabGroup)
 
-  // ── Rim score lines (decorative horizontal rings) ─────────────────────────
+  // â”€â”€ Rim score lines (decorative horizontal rings) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const scorePositions = [
     HEIGHT * 0.5  - HEIGHT * 0.18,
     -(HEIGHT * 0.5 - HEIGHT * 0.18),
@@ -299,7 +299,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
     group.add(scoreMesh)
   })
 
-  // ── Emerald glow ring (bottom ambient) ───────────────────────────────────
+  // â”€â”€ Emerald glow ring (bottom ambient) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const glowGeo = new THREE.TorusGeometry(RAD * 0.7, 0.025, 6, 64)
   const glowMat = new THREE.MeshBasicMaterial({
     color:       0x34d399,
@@ -311,7 +311,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
   glowMesh.rotation.x = Math.PI / 2
   group.add(glowMesh)
 
-  // ── Shadows from floor ────────────────────────────────────────────────────
+  // â”€â”€ Shadows from floor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   group.traverse((obj) => {
     if (obj instanceof THREE.Mesh) {
       obj.castShadow    = true
@@ -319,7 +319,7 @@ export function buildTinCan(envMap: THREE.Texture): TinCanGroup {
     }
   })
 
-  // ── Dispose helper ────────────────────────────────────────────────────────
+  // â”€â”€ Dispose helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const dispose = () => {
     labelTex.dispose()
     lidTex.dispose()

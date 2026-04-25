@@ -26,10 +26,23 @@ export class AuthError extends Error {
  * const session = await getSession()
  * if (!session) redirect("/login")
  */
-export async function getSession(): Promise<TokenPayload | null> {
+function getBearerTokenFromRequest(request?: Pick<Request, "headers"> | null) {
+  const header = request?.headers.get("authorization") ?? request?.headers.get("Authorization")
+  if (!header) return null
+
+  const [scheme, token] = header.split(" ")
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null
+  return token.trim()
+}
+
+export async function getSession(
+  request?: Pick<Request, "headers"> | null
+): Promise<TokenPayload | null> {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")?.value
+    const cookieToken = cookieStore.get("token")?.value
+    const bearerToken = getBearerTokenFromRequest(request)
+    const token = cookieToken ?? bearerToken
     if (!token) return null
     return verifyToken(token)
   } catch {
@@ -45,8 +58,10 @@ export async function getSession(): Promise<TokenPayload | null> {
  * const session = await requireSession()
  * // guaranteed: session.userId, session.email, session.role
  */
-export async function requireSession(): Promise<TokenPayload> {
-  const session = await getSession()
+export async function requireSession(
+  request?: Pick<Request, "headers"> | null
+): Promise<TokenPayload> {
+  const session = await getSession(request)
   if (!session) {
     throw new AuthError("Unauthorized", 401)
   }
@@ -57,8 +72,10 @@ export async function requireSession(): Promise<TokenPayload> {
  * Enforces an authenticated ADMIN session for mutation routes.
  * Keeping this in one place prevents admin checks from drifting across files.
  */
-export async function requireAdminSession(): Promise<TokenPayload> {
-  const session = await requireSession()
+export async function requireAdminSession(
+  request?: Pick<Request, "headers"> | null
+): Promise<TokenPayload> {
+  const session = await requireSession(request)
   if (session.role !== "ADMIN") {
     throw new AuthError("Forbidden", 403)
   }

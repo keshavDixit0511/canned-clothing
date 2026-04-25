@@ -13,7 +13,16 @@ type PasswordUpdateResponse = {
 
 async function handlePasswordUpdate(req: Request) {
   try {
-    const session = await requireSession()
+    const session = await requireSession(req)
+
+    if (session.authProvider === "clerk") {
+      return apiError(
+        "Password is managed by Clerk",
+        403,
+        "PASSWORD_MANAGED_EXTERNALLY"
+      )
+    }
+
     const body = await req.json()
     const data = changePasswordSchema.parse(body)
 

@@ -126,7 +126,7 @@ export default function LeaderboardPage() {
             {/* Table header */}
             <div className="grid grid-cols-12 border-b border-white/8 px-5 py-3">
               <span className="col-span-1 text-[10px] font-bold uppercase tracking-wider text-white/30">#</span>
-              <span className="col-span-5 text-[10px] font-bold uppercase tracking-wider text-white/30">Grower</span>
+              <span className="col-span-5 text-[10px] font-bold uppercase tracking-wider text-white/30">Member</span>
               <span className="col-span-3 text-[10px] font-bold uppercase tracking-wider text-white/30 text-right">Plants</span>
               <span className="col-span-3 text-[10px] font-bold uppercase tracking-wider text-white/30 text-right">Points</span>
             </div>

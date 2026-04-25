@@ -1,4 +1,4 @@
-// app/(shop)/products/page.tsx
+﻿// app/(shop)/products/page.tsx
 "use client"
 
 export const dynamic = "force-dynamic"
@@ -23,21 +23,21 @@ interface Product {
   images:      { url: string; order: number }[]
 }
 
-// ── Filters based on Product.activity field ───────────────────────────────────
+// â”€â”€ Filters based on Product.activity field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ACTIVITY_FILTERS = [
-  { label: "All Styles",   value: "all",     emoji: "✨" },
-  { label: "Daily Wear",   value: "daily",   emoji: "🌿" },
-  { label: "Gym",          value: "gym",     emoji: "💪" },
-  { label: "Work",         value: "work",    emoji: "💼" },
-  { label: "Outdoor",      value: "outdoor", emoji: "🏕️" },
-  { label: "Yoga",         value: "yoga",    emoji: "🧘" },
+  { label: "All Styles",   value: "all",     emoji: "âœ¨" },
+  { label: "Daily Wear",   value: "daily",   emoji: "ðŸŒ¿" },
+  { label: "Gym",          value: "gym",     emoji: "ðŸ’ª" },
+  { label: "Work",         value: "work",    emoji: "ðŸ’¼" },
+  { label: "Outdoor",      value: "outdoor", emoji: "ðŸ•ï¸" },
+  { label: "Yoga",         value: "yoga",    emoji: "ðŸ§˜" },
 ]
 
 const SORT_OPTIONS = [
   { label: "Newest",      value: "newest"     },
   { label: "Price: Low",  value: "price_asc"  },
   { label: "Price: High", value: "price_desc" },
-  { label: "Name A–Z",    value: "name_asc"   },
+  { label: "Name Aâ€“Z",    value: "name_asc"   },
 ]
 
 function formatINR(p: number) {
@@ -78,9 +78,9 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           />
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <span className="text-6xl">🥫</span>
+            <span className="text-6xl">ðŸ¥«</span>
             <span className="text-xs text-white/30 font-medium tracking-wider uppercase">
-              DK Tin
+              ESTHETIQUE Tin
             </span>
           </div>
         )}
@@ -107,10 +107,10 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           )}
         </div>
 
-        {/* Seed surprise tag — top right */}
+        {/* Seed surprise tag â€” top right */}
         <div className="absolute top-3 right-3">
           <span className="rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 backdrop-blur-sm">
-            🌱 Seed Surprise
+            ðŸŒ± Seed Surprise
           </span>
         </div>
  
@@ -120,7 +120,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         {/* Quick view on hover */}
         <div className="absolute bottom-3 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
           <span className="rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-1.5 text-xs font-bold text-white">
-            View Details →
+            View Details â†’
           </span>
         </div>
       </div>
@@ -146,7 +146,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
               ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400 group-hover:bg-emerald-400/20"
               : "border-white/10 bg-white/5 text-white/25"
           )}>
-            {inStock ? "Shop Now →" : availability.label}
+            {inStock ? "Shop Now â†’" : availability.label}
           </span>
         </div>
       </div>
@@ -154,7 +154,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
   )
 }
 
-// ── Skeleton loader ───────────────────────────────────────────────────────────
+// â”€â”€ Skeleton loader â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SkeletonCard() {
   return (
     <div className="rounded-2xl border border-white/6 bg-white/3 overflow-hidden animate-pulse">
@@ -232,10 +232,10 @@ function ProductsPageContent() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-24 space-y-8">
 
-        {/* ── Header ── */}
+        {/* â”€â”€ Header â”€â”€ */}
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400 mb-1">
-            DK Collection
+            ESTHETIQUE Collection
           </p>
           <h1
             className="text-4xl sm:text-6xl text-white leading-none"
@@ -244,12 +244,12 @@ function ProductsPageContent() {
             The Seeded Shirts
           </h1>
           <p className="mt-2 text-sm text-white/40 max-w-lg">
-            Every shirt arrives in a brushed aluminum tin — with a seed surprise inside.
-            Wear it. Plant it. Watch it grow.
+            Every piece is made to feel premium, durable, and purpose-led.
+            Explore eco-friendly clothing built for style, comfort, and sustainable living.
           </p>
         </div>
 
-        {/* ── Search + Sort ── */}
+        {/* â”€â”€ Search + Sort â”€â”€ */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30"
@@ -267,7 +267,7 @@ function ProductsPageContent() {
                 onClick={() => setSearch("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
               >
-                ✕
+                âœ•
               </button>
             )}
           </div>
@@ -282,7 +282,7 @@ function ProductsPageContent() {
           </select>
         </div>
 
-        {/* ── Activity filter pills ── */}
+        {/* â”€â”€ Activity filter pills â”€â”€ */}
         <div className="flex flex-wrap gap-2">
           {ACTIVITY_FILTERS.map((f) => (
             <button
@@ -303,21 +303,21 @@ function ProductsPageContent() {
               onClick={() => setSeedType("")}
               className="rounded-full border border-emerald-400/40 bg-emerald-400/12 px-4 py-1.5 text-xs font-bold text-emerald-300 transition-all duration-200"
             >
-              🌱 {seedType} ×
+              ðŸŒ± {seedType} Ã—
             </button>
           )}
         </div>
 
-        {/* ── Seed surprise info strip ── */}
+        {/* â”€â”€ Seed surprise info strip â”€â”€ */}
         <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 px-5 py-3">
-          <span className="text-xl">🌱</span>
+          <span className="text-xl">ðŸŒ±</span>
           <p className="text-sm text-emerald-400/80">
             <span className="font-bold text-emerald-400">Every tin includes a seed surprise.</span>
-            {" "}We curate the perfect seed for each shirt — scan the QR on delivery to find out what&apos;s growing inside yours.
+            {" "}We curate the perfect seed for each shirt â€” scan the QR on delivery to find out what&apos;s growing inside yours.
           </p>
         </div>
 
-        {/* ── Results count + clear ── */}
+        {/* â”€â”€ Results count + clear â”€â”€ */}
         {!loading && (
           <div className="flex items-center justify-between">
             <p className="text-xs text-white/30">
@@ -334,14 +334,14 @@ function ProductsPageContent() {
           </div>
         )}
 
-        {/* ── Product grid ── */}
+        {/* â”€â”€ Product grid â”€â”€ */}
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
-            <p className="text-5xl mb-4">🥫</p>
+            <p className="text-5xl mb-4">ðŸ¥«</p>
             <h2
               className="text-3xl text-white mb-2"
               style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)" }}

@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { MobileNav } from "@/components/layout/MobileNav"
 import { CartDrawer } from "@/components/cart/CartDrawer"
+import { ClerkSessionSync } from "@/components/auth/ClerkSessionSync"
 
 interface LayoutShellProps {
   children: React.ReactNode
@@ -29,6 +30,8 @@ interface LayoutShellProps {
 export function LayoutShell({ children }: LayoutShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#050d0a]">
+      <ClerkSessionSync />
+
       {/* Fixed top header */}
       <Header />
 

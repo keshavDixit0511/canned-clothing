@@ -109,7 +109,7 @@ export function ThreeDTin({
       ctx.fillStyle   = "rgba(255,255,255,0.6)"
       ctx.globalAlpha = 0.7
       ctx.letterSpacing = "8px"
-      ctx.fillText("ALUM & EARTH", 256, 200)
+      ctx.fillText("ESTHETIQUE", 256, 200)
 
       // Accent line
       ctx.globalAlpha = 0.5

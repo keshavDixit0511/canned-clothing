@@ -42,7 +42,7 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     // Product mutations stay admin-only even if the frontend later adds
     // a separate admin console or management workflow.
-    await requireAdminSession()
+    await requireAdminSession(req)
 
     const { slug } = await params
     const body = await req.json()
@@ -96,7 +96,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   try {
     // Deleting catalog items is destructive, so we require an admin session
     // on the server regardless of which UI initiates the request.
-    await requireAdminSession()
+    await requireAdminSession(_req)
 
     const { slug } = await params
     await prisma.product.delete({ where: { slug } })

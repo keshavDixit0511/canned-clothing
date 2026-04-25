@@ -6,8 +6,10 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
+import { useClerk, useUser } from "@clerk/nextjs"
 import { useCart } from "@/hooks/useCart"
 import { useCartStore } from "@/store/cartStore"
+import { getDisplayName, getInitials } from "@/lib/profile"
 import { cn } from "@/lib/utils"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -34,10 +36,10 @@ function Logo() {
       </div>
       <div className="flex flex-col leading-none">
         <span className="font-['Syne'] text-[15px] font-black tracking-tight text-white">
-          Canned
+          ESTHETIQUE
         </span>
         <span className="font-['Syne'] text-[9px] font-bold tracking-[0.22em] text-emerald-400 uppercase">
-          Clothing
+          Where style meets purpose.
         </span>
       </div>
     </Link>
@@ -186,7 +188,7 @@ function CartButton() {
 // ─── User Dropdown ─────────────────────────────────────────────────────────────
 
 function UserMenu({ user }: { user: UserStats }) {
-  const router = useRouter()
+  const { signOut } = useClerk()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -203,15 +205,14 @@ function UserMenu({ user }: { user: UserStats }) {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" })
-    router.push("/login")
-    router.refresh()
+    try {
+      await signOut({ redirectUrl: "/login" })
+    } catch {
+      window.location.assign("/login")
+    }
   }
 
-  const initials = user.name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
+  const initials = getInitials(user.name, "EU")
 
   const menuItems = [
     { label: "Dashboard",   href: "/dashboard",          emoji: "📊" },
@@ -307,6 +308,7 @@ function UserMenu({ user }: { user: UserStats }) {
 export function Header() {
   const pathname = usePathname()
   const [user, setUser] = useState<UserStats | null>(null)
+  const { isLoaded: clerkLoaded, isSignedIn: clerkSignedIn, user: clerkUser } = useUser()
   const [scrolled, setScrolled] = useState(false)
 
   // Hydrate the cart store from the server in one stable global location.
@@ -338,7 +340,7 @@ export function Header() {
           profileRes.json(),
         ])
         setUser({
-          name: profile.name ?? "Grower",
+          name: profile.name ?? "ESTHETIQUE User",
           image: profile.image ?? null,
           plantsCount: eco.treesPlanted ?? 0,
           leaderboardPoints: lb.points ?? 0,
@@ -349,6 +351,22 @@ export function Header() {
       }
     })()
   }, [pathname])
+
+  const sessionUser =
+    clerkLoaded && clerkSignedIn && clerkUser
+      ? {
+          name: getDisplayName({
+            name: clerkUser.fullName ?? null,
+            firstName: clerkUser.firstName ?? null,
+            lastName: clerkUser.lastName ?? null,
+            email: clerkUser.primaryEmailAddress?.emailAddress ?? null,
+          }),
+          image: clerkUser.imageUrl ?? null,
+          plantsCount: user?.plantsCount ?? 0,
+          leaderboardPoints: user?.leaderboardPoints ?? 0,
+          leaderboardRank: user?.leaderboardRank ?? null,
+        }
+      : user
 
   const navLinks = [
     { label: "Shop",       href: "/products" },
@@ -396,11 +414,11 @@ export function Header() {
         <SearchBar />
 
         {/* Plants + leaderboard pill */}
-        {user && (
+        {sessionUser && (
           <PlantsPill
-            count={user.plantsCount}
-            rank={user.leaderboardRank}
-            points={user.leaderboardPoints}
+            count={sessionUser.plantsCount}
+            rank={sessionUser.leaderboardRank}
+            points={sessionUser.leaderboardPoints}
           />
         )}
 
@@ -408,8 +426,8 @@ export function Header() {
         <CartButton />
 
         {/* User menu or auth links */}
-        {user ? (
-          <UserMenu user={user} />
+        {sessionUser ? (
+          <UserMenu user={sessionUser} />
         ) : (
           <div className="flex items-center gap-2">
             <Link

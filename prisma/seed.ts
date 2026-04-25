@@ -1,4 +1,4 @@
-import "dotenv/config"
+﻿import "dotenv/config"
 
 import {
   OrderStatus,
@@ -111,16 +111,16 @@ const products = [
 ]
 
 const userSeeds = [
-  { name: "Demo Grower", email: "demo@alumandearth.com", role: Role.USER },
-  { name: "Aarav Khanna", email: "aarav@alumandearth.com", role: Role.USER },
-  { name: "Meera Shah", email: "meera@alumandearth.com", role: Role.USER },
-  { name: "Rohit Patel", email: "rohit@alumandearth.com", role: Role.USER },
-  { name: "Nisha Tandon", email: "nisha@alumandearth.com", role: Role.USER },
-  { name: "Kabir Rao", email: "kabir@alumandearth.com", role: Role.USER },
-  { name: "Ishita Sen", email: "ishita@alumandearth.com", role: Role.USER },
-  { name: "Dev Malhotra", email: "dev@alumandearth.com", role: Role.USER },
-  { name: "Ananya Iyer", email: "ananya@alumandearth.com", role: Role.USER },
-  { name: "Admin", email: "admin@alumandearth.com", role: Role.ADMIN },
+  { name: "Demo Grower", email: "demo@esthetique.com", role: Role.USER },
+  { name: "Aarav Khanna", email: "aarav@esthetique.com", role: Role.USER },
+  { name: "Meera Shah", email: "meera@esthetique.com", role: Role.USER },
+  { name: "Rohit Patel", email: "rohit@esthetique.com", role: Role.USER },
+  { name: "Nisha Tandon", email: "nisha@esthetique.com", role: Role.USER },
+  { name: "Kabir Rao", email: "kabir@esthetique.com", role: Role.USER },
+  { name: "Ishita Sen", email: "ishita@esthetique.com", role: Role.USER },
+  { name: "Dev Malhotra", email: "dev@esthetique.com", role: Role.USER },
+  { name: "Ananya Iyer", email: "ananya@esthetique.com", role: Role.USER },
+  { name: "Admin", email: "admin@esthetique.com", role: Role.ADMIN },
 ]
 
 type SeedUser = {
@@ -285,7 +285,7 @@ async function seedOrders(demoUserId: string, seededProducts: Awaited<ReturnType
 }
 
 async function seedPlants(users: SeedUser[], seededProducts: Awaited<ReturnType<typeof seedProducts>>) {
-  const demoUser = users.find((user) => user.email === "demo@alumandearth.com")
+  const demoUser = users.find((user) => user.email === "demo@esthetique.com")
   if (!demoUser) {
     throw new Error("Demo user missing during plant seeding")
   }
@@ -375,7 +375,7 @@ async function seedPlants(users: SeedUser[], seededProducts: Awaited<ReturnType<
     })
   }
 
-  const leaderboardUsers = users.filter((user) => user.email !== "admin@alumandearth.com")
+  const leaderboardUsers = users.filter((user) => user.email !== "admin@esthetique.com")
 
   for (const [index, user] of leaderboardUsers.entries()) {
     const points = [1260, 1125, 980, 860, 740, 620, 500, 380, 265][index] ?? 150
@@ -420,7 +420,7 @@ async function main() {
   const users = await seedUsers()
   const seededProducts = await seedProducts()
 
-  const demoUser = users.find((user) => user.email === "demo@alumandearth.com")
+  const demoUser = users.find((user) => user.email === "demo@esthetique.com")
   if (!demoUser) {
     throw new Error("Demo user missing after user seed")
   }
@@ -431,8 +431,8 @@ async function main() {
   await seedEcoImpact()
 
   console.log("Database seeded successfully.")
-  console.log("Demo login: demo@alumandearth.com / Demo@12345")
-  console.log("Admin login: admin@alumandearth.com / Demo@12345")
+  console.log("Demo login: demo@esthetique.com / Demo@12345")
+  console.log("Admin login: admin@esthetique.com / Demo@12345")
 }
 
 main()
@@ -443,3 +443,5 @@ main()
   .finally(async () => {
     await prisma.$disconnect()
   })
+
+

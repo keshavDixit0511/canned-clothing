@@ -32,6 +32,12 @@ export default async function AdminProductsPage() {
             Availability control
           </h2>
         </div>
+        <Link
+          href="/admin/products/new"
+          className="inline-flex items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-emerald-300/50 hover:bg-emerald-400/20 hover:text-emerald-100"
+        >
+          Add product
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-white/8">

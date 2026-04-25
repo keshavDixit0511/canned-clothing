@@ -1,4 +1,4 @@
-// components/layout/Footer.tsx
+﻿// components/layout/Footer.tsx
 
 "use client"
 
@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface EcoStats {
   treesPlanted: number
@@ -14,7 +14,7 @@ interface EcoStats {
   ecoScore: number
 }
 
-// ─── Animated counter ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Animated counter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Count({ value, suffix = "" }: { value: number; suffix?: string }) {
   const [display, setDisplay] = useState(0)
@@ -43,7 +43,7 @@ function Count({ value, suffix = "" }: { value: number; suffix?: string }) {
   )
 }
 
-// ─── Newsletter ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Newsletter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Newsletter() {
   const [email, setEmail]     = useState("")
@@ -53,7 +53,7 @@ function Newsletter() {
     e.preventDefault()
     if (!email.trim()) return
     setStatus("loading")
-    // Simulate — wire up to your email service (SendGrid, etc.)
+    // Simulate â€” wire up to your email service (SendGrid, etc.)
     await new Promise((r) => setTimeout(r, 900))
     setStatus("done")
     setEmail("")
@@ -68,7 +68,7 @@ function Newsletter() {
 
       {status === "done" ? (
         <p className="text-sm text-emerald-400 flex items-center gap-2">
-          <span>✓</span> You&apos;re subscribed!
+          <span>âœ“</span> You&apos;re subscribed!
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="flex gap-2">
@@ -101,7 +101,7 @@ function Newsletter() {
   )
 }
 
-// ─── Footer ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function Footer() {
   const [eco, setEco] = useState<EcoStats | null>(null)
@@ -176,15 +176,15 @@ export function Footer() {
   return (
     <footer className="border-t border-white/8 bg-[#050d0a]">
 
-      {/* ── Eco Impact Banner ── */}
+      {/* â”€â”€ Eco Impact Banner â”€â”€ */}
       {eco && (
         <div className="border-b border-white/5 bg-emerald-950/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 py-5">
             <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
               {[
-                { emoji: "🌱", label: "Trees Planted",  value: eco.treesPlanted, suffix: "" },
-                { emoji: "📦", label: "Orders Placed",  value: eco.orders,        suffix: "" },
-                { emoji: "⭐", label: "Eco Score",      value: eco.ecoScore,      suffix: " pts" },
+                { emoji: "ðŸŒ±", label: "Trees Planted",  value: eco.treesPlanted, suffix: "" },
+                { emoji: "ðŸ“¦", label: "Orders Placed",  value: eco.orders,        suffix: "" },
+                { emoji: "â­", label: "Eco Score",      value: eco.ecoScore,      suffix: " pts" },
               ].map(({ emoji, label, value, suffix }) => (
                 <div key={label} className="flex items-center gap-3 text-center">
                   <span className="text-2xl">{emoji}</span>
@@ -203,7 +203,7 @@ export function Footer() {
         </div>
       )}
 
-      {/* ── Main footer grid ── */}
+      {/* â”€â”€ Main footer grid â”€â”€ */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
 
@@ -212,20 +212,19 @@ export function Footer() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group w-fit">
               <div className="h-9 w-9 rounded-xl border border-emerald-400/30 bg-emerald-400/10 flex items-center justify-center group-hover:border-emerald-400/60 transition-all duration-300">
-                <span className="text-lg">🥫</span>
+                <span className="text-lg">ðŸ¥«</span>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-['Syne'] text-base font-black text-white">Canned</span>
-                <span className="font-['Syne'] text-[10px] font-bold tracking-[0.2em] text-emerald-400 uppercase">Clothing</span>
+                <span className="font-['Syne'] text-base font-black text-white">ESTHETIQUE</span>
+                <span className="font-['Syne'] text-[10px] font-bold tracking-[0.16em] text-emerald-400 uppercase">Where style meets purpose.</span>
               </div>
             </Link>
 
             {/* Tagline */}
             <p className="text-sm text-white/40 leading-relaxed max-w-xs">
-              Wear it. Plant it. Grow it.{" "}
+              Where style meets purpose.{" "}
               <span className="text-white/60">
-                Every tin you buy becomes a garden.
-                Every plant you grow changes the world.
+                Sustainable clothing that brings style, plantable impact, and eco-conscious design together.
               </span>
             </p>
 
@@ -279,11 +278,11 @@ export function Footer() {
         </div>
       </div>
 
-      {/* ── Bottom bar ── */}
+      {/* â”€â”€ Bottom bar â”€â”€ */}
       <div className="border-t border-white/5">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4">
           <p className="text-xs text-white/25">
-            © {new Date().getFullYear()} Canned Clothing. All rights reserved.
+            (c) {new Date().getFullYear()} ESTHETIQUE. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {[
@@ -299,7 +298,7 @@ export function Footer() {
               </Link>
             ))}
             <span className="text-xs text-white/15">
-              Built with 🌱 for the planet
+              Built with ðŸŒ± for the planet
             </span>
           </div>
         </div>
@@ -307,3 +306,4 @@ export function Footer() {
     </footer>
   )
 }
+

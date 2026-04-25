@@ -1,4 +1,4 @@
-// services/email/sendGrid.ts
+﻿// services/email/sendGrid.ts
 
 /**
  * Email service using SendGrid.
@@ -29,15 +29,15 @@ interface OrderEmailData {
   shippingZip:     string
 }
 
-// ─── Core send function ───────────────────────────────────────────────────────
+// â”€â”€â”€ Core send function â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function sendEmail(options: EmailOptions): Promise<void> {
   const apiKey   = process.env.SENDGRID_API_KEY
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL ?? "hello@alumandearth.com"
-  const fromName  = process.env.SENDGRID_FROM_NAME  ?? "ALUM & EARTH"
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL ?? "hello@esthetique.com"
+  const fromName  = process.env.SENDGRID_FROM_NAME  ?? "ESTHETIQUE"
 
   if (!apiKey) {
-    console.warn("[SendGrid] SENDGRID_API_KEY not set — email not sent")
+    console.warn("[SendGrid] SENDGRID_API_KEY not set â€” email not sent")
     console.log("[SendGrid] Would have sent:", { to: options.to, subject: options.subject })
     return
   }
@@ -54,7 +54,7 @@ async function sendEmail(options: EmailOptions): Promise<void> {
   })
 }
 
-// ─── Email templates ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Email templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatINR(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
@@ -80,13 +80,13 @@ function baseTemplate(content: string): string {
     <body>
       <div class="container">
         <div class="header">
-          <div class="brand">ALUM & EARTH — DK</div>
-          <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">Wear it. Plant it. Grow it.</div>
+          <div class="brand">ESTHETIQUE</div>
+          <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">Where style meets purpose.</div>
         </div>
         ${content}
         <div class="footer">
-          <p>© ${new Date().getFullYear()} ALUM & EARTH. All rights reserved.</p>
-          <p>Made in India 🌱</p>
+          <p>(c) ${new Date().getFullYear()} ESTHETIQUE. All rights reserved.</p>
+          <p>Made in India ðŸŒ±</p>
         </div>
       </div>
     </body>
@@ -94,27 +94,27 @@ function baseTemplate(content: string): string {
   `
 }
 
-// ─── Email senders ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Email senders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Welcome email after registration.
  */
 export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
   const html = baseTemplate(`
-    <h1 style="color: #34d399; font-size: 28px; margin-bottom: 16px;">Welcome, ${name}! 🌱</h1>
+    <h1 style="color: #34d399; font-size: 28px; margin-bottom: 16px;">Welcome, ${name}! ðŸŒ±</h1>
     <p style="color: #9ca3af; line-height: 1.6;">
-      You've joined the ALUM & EARTH community. Every shirt you buy comes in a brushed aluminum tin
-      with seeds inside — wear it, plant it, and track your plant's growth online.
+      You've joined the ESTHETIQUE community. Every shirt you buy comes in a premium eco-friendly packaging
+      with seeds inside â€” wear it, plant it, and track your plant's growth online.
     </p>
     <div style="text-align: center; margin: 32px 0;">
       <a href="${process.env.NEXT_PUBLIC_URL}/products"
         style="background: #059669; color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px;">
-        Shop Your First Tin →
+        Shop Your First Tin â†’
       </a>
     </div>
   `)
 
-  await sendEmail({ to, subject: "Welcome to ALUM & EARTH 🌱", html })
+  await sendEmail({ to, subject: "Welcome to ESTHETIQUE ðŸŒ±", html })
 }
 
 /**
@@ -127,13 +127,13 @@ export async function sendOrderConfirmationEmail(
   const itemsHtml = data.items.map((item) => `
     <tr>
       <td style="padding: 8px 0; color: #d1d5db;">${item.name}</td>
-      <td style="padding: 8px 0; color: #9ca3af; text-align: center;">×${item.quantity}</td>
+      <td style="padding: 8px 0; color: #9ca3af; text-align: center;">Ã—${item.quantity}</td>
       <td style="padding: 8px 0; color: #34d399; text-align: right;">${formatINR(item.price * item.quantity)}</td>
     </tr>
   `).join("")
 
   const html = baseTemplate(`
-    <h2 style="color: #34d399; margin-bottom: 8px;">Order Confirmed! 🎉</h2>
+    <h2 style="color: #34d399; margin-bottom: 8px;">Order Confirmed! ðŸŽ‰</h2>
     <p style="color: #9ca3af;">Hi ${data.userName}, your order has been placed successfully.</p>
 
     <div style="background: #111811; border: 1px solid #1a2a1a; border-radius: 12px; padding: 20px; margin: 24px 0;">
@@ -153,18 +153,18 @@ export async function sendOrderConfirmationEmail(
       <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px;">Shipping To</p>
       <p style="color: #d1d5db; margin: 0;">${data.shippingName}</p>
       <p style="color: #9ca3af; margin: 4px 0 0; font-size: 14px;">
-        ${data.shippingAddr}, ${data.shippingCity}, ${data.shippingState} — ${data.shippingZip}
+        ${data.shippingAddr}, ${data.shippingCity}, ${data.shippingState} â€” ${data.shippingZip}
       </p>
     </div>
 
     <div style="background: #052e16; border: 1px solid #166534; border-radius: 12px; padding: 16px; text-align: center;">
       <p style="color: #34d399; margin: 0; font-size: 14px;">
-        🌱 When your tin arrives, scan the QR code to plant your seed and earn Green Points!
+        ðŸŒ± When your tin arrives, scan the QR code to plant your seed and earn Green Points!
       </p>
     </div>
   `)
 
-  await sendEmail({ to, subject: `Order Confirmed — #${data.orderId.slice(-8).toUpperCase()}`, html })
+  await sendEmail({ to, subject: `Order Confirmed â€” #${data.orderId.slice(-8).toUpperCase()}`, html })
 }
 
 /**
@@ -177,19 +177,19 @@ export async function sendOrderShippedEmail(
   trackingUrl?: string
 ): Promise<void> {
   const html = baseTemplate(`
-    <h2 style="color: #38bdf8; margin-bottom: 8px;">Your tin is on its way! 📦</h2>
+    <h2 style="color: #38bdf8; margin-bottom: 8px;">Your tin is on its way! ðŸ“¦</h2>
     <p style="color: #9ca3af;">Hi ${userName}, order <strong style="color: white;">#${orderId.slice(-8).toUpperCase()}</strong> has been shipped.</p>
     ${trackingUrl ? `
     <div style="text-align: center; margin: 32px 0;">
       <a href="${trackingUrl}"
         style="background: #0369a1; color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px;">
-        Track Your Order →
+        Track Your Order â†’
       </a>
     </div>` : ""}
-    <p style="color: #6b7280; font-size: 14px;">Get ready to wear it, plant it, and grow it. 🌱</p>
+    <p style="color: #6b7280; font-size: 14px;">Get ready to wear it, plant it, and grow it. ðŸŒ±</p>
   `)
 
-  await sendEmail({ to, subject: `Your tin is on its way — #${orderId.slice(-8).toUpperCase()}`, html })
+  await sendEmail({ to, subject: `Your tin is on its way â€” #${orderId.slice(-8).toUpperCase()}`, html })
 }
 
 /**
@@ -205,11 +205,14 @@ export async function sendPasswordResetEmail(
     <div style="text-align: center; margin: 32px 0;">
       <a href="${resetLink}"
         style="background: #059669; color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px;">
-        Reset Password →
+        Reset Password â†’
       </a>
     </div>
     <p style="color: #6b7280; font-size: 12px;">If you didn't request this, you can safely ignore this email.</p>
   `)
 
-  await sendEmail({ to, subject: "Reset your ALUM & EARTH password", html })
+  await sendEmail({ to, subject: "Reset your ESTHETIQUE password", html })
 }
+
+
+

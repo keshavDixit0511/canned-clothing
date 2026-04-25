@@ -104,6 +104,51 @@ export const changePasswordSchema = z
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
+// â”€â”€â”€ Profile / Onboarding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export const genderOptions = [
+  "MALE",
+  "FEMALE",
+  "NON_BINARY",
+  "PREFER_NOT_TO_SAY",
+  "OTHER",
+] as const
+
+export const genderSchema = z.enum(genderOptions)
+
+export const profileUpdateSchema = z.object({
+  name: nameSchema.optional(),
+  firstName: nameSchema.optional(),
+  lastName: nameSchema.optional(),
+  gender: genderSchema.optional(),
+  addressLine1: z.string().min(5, "Enter a full address").max(200).trim().optional(),
+  addressLine2: z.string().max(200).trim().optional(),
+  city: z.string().min(2, "Enter a city").max(100).trim().optional(),
+  state: z.string().min(2, "Enter a state").max(100).trim().optional(),
+  country: z.string().min(2).max(100).trim().optional(),
+  pincode: pincodeSchema.optional(),
+  onboardingCompleted: z.boolean().optional(),
+})
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+  })
+
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>
+
+export const onboardingSchema = z.object({
+  firstName: nameSchema,
+  lastName: nameSchema,
+  gender: genderSchema,
+  addressLine1: z.string().min(5, "Enter a full address").max(200).trim(),
+  addressLine2: z.string().max(200).trim().optional(),
+  city: z.string().min(2, "Enter a city").max(100).trim(),
+  state: z.string().min(2, "Enter a state").max(100).trim(),
+  country: z.string().min(2).max(100).trim(),
+  pincode: pincodeSchema,
+})
+
+export type OnboardingInput = z.infer<typeof onboardingSchema>
+
 // ─── Shipping Address ─────────────────────────────────────────────────────────
 
 export const shippingAddressSchema = z.object({
